@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:/Users/ismismlxu/Desktop/ROBOCON2026/ROBOCON26_V.CMAKE\" && grep -rn \"comServiceInit\\\\|osTaskInit\\\\|Robot_Init\\\\|uart3RxProcessTask\\\\|osThreadNew\" --include=*.cpp --include=*.h --include=*.hpp APP/robot_task/ APP/robot_init/ 2>/dev/null)",
+      "Read(//c/Users/ismismlxu/Desktop/ROBOCON2026/ROBOCON26_V.CMAKE/**)",
+      "Read(//c/Users/ismismlxu/Desktop/ROBOCON2026/ROBOCON26_V.CMAKE/APP/robot_init/**)"
+    ]
+  }
+}
