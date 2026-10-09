@@ -13,6 +13,7 @@
 
 #include "Canbus.hpp"
 #include "pid_controller.h"
+#include "math_utils.hpp"
 
 #define RAD_2_DEG            57.2957795f
 #define DEG_2_RAD            0.01745329252f
@@ -38,11 +39,10 @@ public:
     void setMotorDegSpeed(float deg_speed) { ref_deg_speed_ = deg_speed; }
     void setMotorDeg(float deg) { ref_deg_ = deg; }
 
-    PID_t* getDegSpeedPID(void) { return &deg_speed_pid_;}
-    PID_t* getDegPID(void) { return &deg_pid_;}
+
 
     void pidDegUpdate(void) {
-             ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ref_deg_);
+            ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ref_deg_);
     }
 
     void pidDegSpeedUpdate(void){
@@ -53,9 +53,6 @@ public:
         if(output_type_ == PIDMode::DEGREE ) pidDegUpdate();
         if(output_type_ != PIDMode::NONE) pidDegSpeedUpdate();
     }
-
-    float getRefDegSpeed() { return ref_deg_speed_; }
-    float getRefDeg() { return ref_deg_; }
 
     float getSingleDeg(void) const { return single_deg_; }
     float getSumDeg(void) const { return sum_deg_; }
@@ -71,10 +68,10 @@ protected:
     float max_cmd_{99999.0f};
     float reduction_ratio_{1.0f};
 
-    float single_deg_{0.0f};
-    float sum_deg_{0.0f};
-    float deg_speed_{0.0f};
-    float torque_{0.0f};
+    float single_deg_{0.0f};    //转子在单圈内的绝对位置
+    float sum_deg_{0.0f};       //电机输出轴累计的角度
+    float deg_speed_{0.0f};     //电机输出轴角速度
+    float torque_{0.0f};        //输出轴扭矩
     float temperature_{0.0f};
 
     PID_t deg_speed_pid_{};
@@ -87,9 +84,9 @@ public:
     C620Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const PIDMode output_type,
               float reduction = 3591.0f / 187.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
-              float pid_speed_improve = NONE,
+              uint16_t pid_speed_improve = NONE,
               float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float max_deg=2000.0f, float deg_max_IL=2000.0f,
-              float pid_deg_improve = NONE)
+              uint16_t pid_deg_improve = NONE)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
                 reduction_ratio_ = reduction;
@@ -135,10 +132,12 @@ public:
         }
         last_encoder_ = encoder_;
 
-        single_deg_ = (encoder_ * 360.0f / kCountPerRound) / reduction_ratio_;
+        float raw_single_deg = (encoder_ * 360.0f / kCountPerRound) / reduction_ratio_;
         sum_deg_ = (static_cast<float>(round_cnt_) - 
                         static_cast<float>(encoder_offset_) / kCountPerRound) * 360.0f / reduction_ratio_
-                         + single_deg_;
+                         + raw_single_deg;
+        single_deg_ = math_utils::WrapAngle(sum_deg_, -180.0f, 180.0f);
+        
 
         /*data[2]~data[3]: data[2]转子RPM高8位，data[3]转子RPM低8位*/
         int16_t raw_rpm = static_cast<int16_t>((data[2] << 8) | data[3]);
