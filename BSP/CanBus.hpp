@@ -97,7 +97,7 @@ private:
     std::atomic<uint32_t> tx_pend_{0};
 
     static CanBus *map_[FDCAN_BUS_CNT];
-    static constexpr uint8_t kMaxDevice = 6;
+    static constexpr uint8_t kMaxDevice = 10;
     CanDevice *device_[kMaxDevice];
 
 };

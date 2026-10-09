@@ -36,7 +36,6 @@ void debug1Task(void *argument)
 
     for(;;)
     {
-        chassis_dirmotor1.setMotorDeg(360.0f);
 
         vTaskDelayUntil(&currentTime, 1);
     }
