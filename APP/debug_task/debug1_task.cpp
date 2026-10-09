@@ -23,10 +23,11 @@
 #include "topic_pool.h"
 #include "chassis_solution.hpp"
 #include "chassis_task.h"
+#include "math_utils.hpp"
 
 osThreadId_t Debug1_TaskHandle;
 
-
+extern C620Motor chassis_dirmotor1;
 
 void debug1Task(void *argument)
 {
@@ -35,7 +36,7 @@ void debug1Task(void *argument)
 
     for(;;)
     {
-
+        chassis_dirmotor1.setMotorDeg(360.0f);
 
         vTaskDelayUntil(&currentTime, 1);
     }

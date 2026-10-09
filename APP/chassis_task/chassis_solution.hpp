@@ -14,53 +14,133 @@
 #include <cmath>
 #include <array>
 
-#define PI 3.1415926535f
+static constexpr float kPI = 3.1415926535f;
+struct Velocity_t{
+    float dir;
+    float speed;
+};
+
+class SteerWheel{
+    /*
+        1    0   
+
+        2    3
+    */
+
+public:
+    SteerWheel() = default;
+
+    void init(MotorBase* dirmotor, MotorBase* drivemotor){
+        dirmotor_ = dirmotor;
+        drivemotor_ = drivemotor;
+    }
+
+    void setVelocity(Velocity_t target_velocity){
+
+        updateWheelState();
+
+        float deg_output = 0.0f;        //由于电机位置环的输入是累计的绝对角度，所以此处也必须用舵轮的累计角度计算，输入和输出必须匹配
+        float degspeed_output = 0.0f;
+        float diff = target_velocity.dir - current_velocity_.dir;
+
+
+        if(diff > 90.0f){
+            if(diff > 270.0f){
+                target_velocity.dir -= 360.0f;
+
+            } else{
+                target_velocity.dir -= 180.0f;
+                target_velocity.speed = -target_velocity.speed;
+            }
+        }
+        else if(diff < -90.0f){
+            if(diff < -270.0f){
+                target_velocity.dir += 360.0f;
+                
+            } else{
+                target_velocity.dir += 180.0f;
+                target_velocity.speed = -target_velocity.speed;
+            }
+        }
+        diff = target_velocity.dir - current_velocity_.dir;
+        
+
+        deg_output = (wheel_sum_deg_ + diff) * kWheelDirReduction;
+        degspeed_output = (target_velocity.speed) * RAD_2_DEG * kWheelDriveReduction / kWheelRadmeter; 
+
+        dirmotor_->setMotorDeg(deg_output);
+        drivemotor_->setMotorDegSpeed(degspeed_output);
+    }
+    
+
+
+private:
+    static constexpr float kWheelDiameter = 0.104f;     //轮径
+    static constexpr float kWheelRadmeter = kWheelDiameter / 2.0f;      //轮半径
+    static constexpr float kWheelCirmeter = kPI * kWheelDiameter;        //轮周
+    static constexpr float kWheelDriveReduction = 1.0f;     //电机输出轴->驱动轮的减速比
+    static constexpr float kWheelDirReduction = 1.0f;       //电机输出轴->舵向轮的减速比
+
+    MotorBase* dirmotor_{};
+    MotorBase* drivemotor_{};
+
+    Velocity_t current_velocity_{};
+    Velocity_t last_velocity_{};
+    float wheel_sum_deg_{0.0f};
+
+    void updateWheelState(){
+
+        wheel_sum_deg_ = dirmotor_->getSumDeg() / kWheelDirReduction;
+        
+        current_velocity_.dir = math_utils::WrapAngle(wheel_sum_deg_,
+            -180.0f, 180.0f);
+        current_velocity_.speed = drivemotor_->getDegSpeed() * DEG_2_RAD * kWheelRadmeter / kWheelDriveReduction;
+        
+    }
+
+};
 
 class SteerChassis{
 public:
-    SteerChassis(const std::array<MotorBase* , 4> &dirmotors,
-                 const std::array<MotorBase* , 4> &drivemotors) :
-    dirmotors_(dirmotors), drivemotors_(drivemotors){}
+    static constexpr uint8_t kWheelNum = 4U;        //轮数
+
+    SteerChassis(const std::array<MotorBase* , kWheelNum> &dirmotors,
+                 const std::array<MotorBase* , kWheelNum> &drivemotors){
+        for(uint8_t i = 0; i < kWheelNum; ++i){
+            steerwheels_[i].init(dirmotors[i], drivemotors[i]);
+        }
+    }
 
     void run(const pub_chassis_cmd &cmd){
         const float vx = cmd.linear_x_;
         const float vy = cmd.linear_y_;
         const float omega = cmd.omega_;
 
-        const float v_ru = std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
+        velocitys_[0].speed = std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
                                      (vy + omega * kx) * (vy + omega * kx));
-        const float v_lu = -std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
+        velocitys_[1].speed = -std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
                                      (vy - omega * kx) * (vy - omega * kx));
-        const float v_ld = std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
+        velocitys_[2].speed = std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
                                      (vy - omega * kx) * (vy - omega * kx));
-        const float v_rd = -std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
+        velocitys_[3].speed = -std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
                                      (vy + omega * kx) * (vy + omega * kx));
         
-        const float rad_ru = std::atan2(vy + omega * kx , vx - omega * ky);
-        const float rad_lu = std::atan2(vy - omega * kx , vx - omega * ky);
-        const float rad_ld = std::atan2(vy - omega * kx , vx + omega * ky);
-        const float rad_rd = std::atan2(vy + omega * kx , vx + omega * ky);
+        velocitys_[0].dir = std::atan2(vy + omega * kx , vx - omega * ky) * RAD_2_DEG;
+        velocitys_[1].dir = std::atan2(vy - omega * kx , vx - omega * ky) * RAD_2_DEG;
+        velocitys_[2].dir = std::atan2(vy - omega * kx , vx + omega * ky) * RAD_2_DEG;
+        velocitys_[3].dir = std::atan2(vy + omega * kx , vx + omega * ky) * RAD_2_DEG;
 
+        if(std::fabs(vx) < 0.00001f &&
+           std::fabs(vy) < 0.00001f &&
+           std::fabs(omega) < 0.00001f){
+            velocitys_[0].dir = 135.0f;
+            velocitys_[1].dir = -135.0f;
+            velocitys_[2].dir = -45.0f;
+            velocitys_[3].dir = 45.0f;
+        }
 
-        //最小转动角度
-        deg_output_[0] = rad_ru * RAD_2_DEG;
-        deg_output_[1] = rad_lu * RAD_2_DEG;
-        deg_output_[2] = rad_ld * RAD_2_DEG;
-        deg_output_[3] = rad_rd * RAD_2_DEG;
-
-        degspeed_output_[0] = v_ru / kWheelRadmeter * RAD_2_DEG;
-        degspeed_output_[1] = v_lu / kWheelRadmeter * RAD_2_DEG;
-        degspeed_output_[2] = v_ld / kWheelRadmeter * RAD_2_DEG;
-        degspeed_output_[3] = v_rd / kWheelRadmeter * RAD_2_DEG;
-
-
-//TODO:最小路径
-
-
-        /*输出degree为基本单位的角度和角速度*/
         for(uint8_t i = 0; i < kWheelNum; ++i){
-            dirmotors_[i]->setMotorDeg(deg_output_[i]);
-            drivemotors_[i]->setMotorDegSpeed(degspeed_output_[i]);
+            steerwheels_[i].setVelocity(velocitys_[i]);
         }
 
 
@@ -70,26 +150,15 @@ public:
 
 private:
 
-    static constexpr float kWheelDiameter = 0.104f;
-    static constexpr float kWheelRadmeter = kWheelDiameter / 2.0f;
-    static constexpr float kWheelCirmeter = PI * kWheelDiameter;
-    static constexpr uint8_t kWheelNum = 4U;
 
     static constexpr float kWheelbase = 1.0f;   //轴距
     static constexpr float kWheeltrack = 1.0f;  //轮距
 
     //ky,kx的值即便在同一个机器人上，也应该是可以不同的，其中，它的原点取决于你想让机器人自转时，绕机器人的哪个点旋转
-    //这里ky，kx除以2纯属偶然，就是碰巧，毕竟师兄的车是正方向底盘
     static constexpr float ky = kWheelbase / 2.0f;  //ky的含义是，点到x轴的距离
     static constexpr float kx = kWheeltrack / 2.0f; //kx的含义是，点到y轴的距离
 
-    std::array<MotorBase*, kWheelNum> dirmotors_{};
-    std::array<MotorBase*, kWheelNum> drivemotors_{};
-
-    std::array<float, kWheelNum> deg_output_{};
-    std::array<float, kWheelNum> degspeed_output_{};
-    std::array<float, kWheelNum> deg_current{};
-
-//TODO:更新当前角度的函数
+    SteerWheel steerwheels_[kWheelNum]{};
+    Velocity_t velocitys_[kWheelNum]{};
 
 };
