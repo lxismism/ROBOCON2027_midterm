@@ -13,7 +13,7 @@
 
 namespace math_utils {
 
-template<typename T> T Clamp(T val, T min, T max){
+inline float Clamp(float val, float min, float max){
     return (val >= max)? max : ((val <= min)? min : val);
 }
 
@@ -25,15 +25,15 @@ inline float WrapAngle(float val, float min, float max){
     return val + min; 
 }
 
-template <typename Tin, typename Tout> Tout Map(Tin val, Tin in0, Tin in1, Tout out0, Tout out1){
+inline float Map(float val, float in0, float in1, float out0, float out1){
 
-    float range_in = static_cast<float>(in1 - in0);
-    float range_out = static_cast<float>(out1 - out0);
+    float range_in = in1 - in0;
+    float range_out = out1 - out0;
 
     if(range_in == 0.0f) return out0;
 
-    float offset_in = static_cast<float>(val - in0);
-    return out0 + static_cast<Tout>(offset_in * range_out / range_in);
+    float offset_in = val - in0;
+    return out0 + offset_in * range_out / range_in;
 
 }
 
