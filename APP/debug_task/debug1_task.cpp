@@ -16,8 +16,13 @@
 #include "lockfree_queue.hpp"
 #include "UartPort.hpp"
 #include "topics.hpp"
+
 #include "Canbus.hpp"
-#include "Motor.hpp"
+#include "MotorBase.hpp"
+#include "djiMotor.hpp"
+#include "dmMotor.hpp"
+#include "vescMotor.hpp"
+
 #include "com_config.h"
 #include "pid_controller.h"
 #include "topic_pool.h"
@@ -37,7 +42,7 @@ void debug1Task(void *argument)
     for(;;)
     {
 
-        vTaskDelayUntil(&currentTime, 1);
+        vTaskDelayUntil(&currentTime, 5);
     }
 
 }

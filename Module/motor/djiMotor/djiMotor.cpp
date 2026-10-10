@@ -1,15 +1,12 @@
 /**
- * @file Motor.cpp
- * @author lxlx (1729649497@qq.com)
  * @brief 
- * @version 0.1
- * @date 2026-09-30
  * 
- * @copyright Copyright (c) 2026
- * 
+ * @param tx_id 
+ * @param rx_id 
+ * @return uint8_t 
  */
 
-#include "Motor.hpp"
+#include "djiMotor.hpp"
 
 static uint8_t djiSlotFromidx(const uint32_t tx_id, const uint32_t rx_id){
     if(tx_id == 0x200){

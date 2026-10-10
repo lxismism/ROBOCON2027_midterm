@@ -16,11 +16,16 @@
 #include "usart.h"
 #include "fdcan.h"
 
-#include "topics.hpp"
 #include "memory_map.h"
 #include "UartPort.hpp"
+
 #include "Canbus.hpp"
-#include "Motor.hpp"
+#include "MotorBase.hpp"
+#include "djiMotor.hpp"
+#include "vescMotor.hpp"
+#include "dmMotor.hpp"
+
+#include "topics.hpp"
 #include "topic_pool.h"
 #include <array>
 #include "chassis_solution.hpp"
