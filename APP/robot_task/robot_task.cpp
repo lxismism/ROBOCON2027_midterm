@@ -17,6 +17,7 @@
 #include "debug2_task.h"
 #include "com_config.h"
 #include "chassis_task.h"
+#include "control_task.h"
 
 
 
@@ -28,6 +29,7 @@ extern osThreadId_t can1Send_TaskHandle;
 extern osThreadId_t can2Send_TaskHandle;
 extern osThreadId_t can3Send_TaskHandle;
 extern osThreadId_t Chassis_TaskHandle;
+extern osThreadId_t control_TaskHandle;
 
 
 void osTaskInit(void)
@@ -80,6 +82,13 @@ void osTaskInit(void)
         .priority = (osPriority_t)osPriorityRealtime,
     };
     Chassis_TaskHandle = osThreadNew(chassisTask, NULL, &chassisTaskHandle_attributes);
+
+    const osThreadAttr_t controlTaskHandle_attributes = {
+        .name = "control_TaskHandle",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t)osPriorityRealtime,
+    };
+    control_TaskHandle = osThreadNew(controlTask, NULL, &controlTaskHandle_attributes);
 
     
 }

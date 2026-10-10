@@ -11,10 +11,8 @@
 #pragma once
 #include "MotorBase.hpp"
 #include "topic_pool.h"
-#include <cmath>
+#include "math_utils.hpp"
 #include <array>
-
-static constexpr float kPI = 3.1415926535f;
 struct Velocity_t{
     float dir;
     float speed;

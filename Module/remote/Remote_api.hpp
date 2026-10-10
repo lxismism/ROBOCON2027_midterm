@@ -6,22 +6,21 @@ namespace Remote {
 
 // 对应 State::ch[0]～ch[3]。
 enum class Channel : uint8_t {
-    CH1 = 0,
-    CH2 = 1,
-    CH3 = 2,
-    CH4 = 3
+    LEFT_X = 0,
+    LEFT_Y = 1,
+    RIGHT_Y = 2,
+    RIGHT_X = 3
 };
 
 // 0 -> -1，2048 -> 0，4095 -> 1。
-inline float normalize_channel(uint16_t raw)
+inline int16_t normalize_channel(uint16_t raw)
 {
     if (raw > 4095U) {
         raw = 4095U;
     }
 
-    const int32_t offset = static_cast<int32_t>(raw) - 2048;
-    return static_cast<float>(offset) /
-           (offset < 0 ? 2048.0f : 2047.0f);
+    const int16_t offset = static_cast<int16_t>(raw) - 2048;
+    return offset;
 }
 
 // 离线或通道编号无效时返回 0；调用前可用 is_fresh() 检查时效。
@@ -35,7 +34,7 @@ inline uint16_t get_channel_raw(const State &state, Channel channel)
 }
 
 // 离线或通道编号无效时返回中立输出 0。
-inline float get_channel(const State &state, Channel channel)
+inline int16_t get_channel(const State &state, Channel channel)
 {
     const uint8_t index = static_cast<uint8_t>(channel);
     if (!is_online(state) || index >= 4U) {

@@ -182,7 +182,7 @@ uint8_t comServiceInit(){
 }
 
 
-/*-------------------------------------usart----------------------------------------*/
+/*-------------------------------------usart3----------------------------------------*/
 void onUart3RxCb(const uint8_t *data, size_t len, void *user){
     (void)user;
     if(data != nullptr && len > 0 && uart3_rx_semaphore != nullptr){
@@ -198,23 +198,19 @@ static_assert(
     "Remote State exceeds topic capacity");
 
     // 远程状态回调函数
-static void on_remote_state(
-    const Remote::State& state,
-    void* user)
-    {
-        (void)user;
+static void on_remote_state(const Remote::State& state, void* user)
+{
+    (void)user;
 
-        // 与订阅端配套保护现有覆盖队列。
-        taskENTER_CRITICAL();
-        (void)remote_publisher.Publish(state);
-        taskEXIT_CRITICAL();
-    }
+    // 与订阅端配套保护现有覆盖队列。
+    taskENTER_CRITICAL();
+    (void)remote_publisher.Publish(state);
+    taskEXIT_CRITICAL();
+}
 
     //创建一个遥控实例
-static Remote::Remote_receiver remote_receiver(
-    on_remote_state,
-    nullptr,
-    Remote::koffline_timeout_ms);
+static Remote::Remote_receiver remote_receiver(on_remote_state,
+    nullptr,Remote::koffline_timeout_ms);
 
 
 void uart3RxProcessTask(void *argument){
@@ -238,7 +234,7 @@ void uart3RxProcessTask(void *argument){
     }
 }
 
-/*-------------------------------------usart----------------------------------------*/
+/*-------------------------------------usart3----------------------------------------*/
 
 /*-------------------------------------fdcan1----------------------------------------*/
 

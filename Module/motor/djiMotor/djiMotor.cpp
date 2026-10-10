@@ -1,10 +1,14 @@
 /**
+ * @file djiMotor.cpp
+ * @author lxlx (1729649497@qq.com)
  * @brief 
+ * @version 0.1
+ * @date 2026-10-10
  * 
- * @param tx_id 
- * @param rx_id 
- * @return uint8_t 
+ * @copyright Copyright (c) 2026
+ * 
  */
+
 
 #include "djiMotor.hpp"
 

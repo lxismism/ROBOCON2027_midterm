@@ -63,14 +63,6 @@ void debug1Task(void *argument)
             }
 
             remote_debug_state = message;
-            ch1 = Remote::get_channel(remote_debug_state, Remote::Channel::CH1);
-            ch2 = Remote::get_channel(remote_debug_state, Remote::Channel::CH2);
-            ch3 = Remote::get_channel(remote_debug_state, Remote::Channel::CH3);
-            ch4 = Remote::get_channel(remote_debug_state, Remote::Channel::CH4);
-            up_pressed = Remote::is_pressed(remote_debug_state, Remote::key::Up);
-            down_pressed = Remote::is_pressed(remote_debug_state, Remote::key::Down);
-            sw1_up = Remote::is_pressed(remote_debug_state, Remote::key::Sw1);
-            left_pressed = Remote::is_pressed(remote_debug_state, Remote::key::Left);
         }
 
         // 没有新消息时，也检查本地状态是否已经过期。
