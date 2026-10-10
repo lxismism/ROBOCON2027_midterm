@@ -30,6 +30,7 @@
 #include <array>
 #include "chassis_solution.hpp"
 
+#include "Remote_receiver.hpp"
 /*-------------------------------------fdcan1----------------------------------------*/
 
 osThreadId_t can1Send_TaskHandle;
@@ -189,16 +190,51 @@ void onUart3RxCb(const uint8_t *data, size_t len, void *user){
     }
 }
 
+static TypedTopicPublisher<Remote::State>
+    remote_publisher(Remote::Remote_state_topic);
+
+static_assert(
+    sizeof(Remote::State) <= TOPICS_MAX_MESSAGE_SIZE,
+    "Remote State exceeds topic capacity");
+
+    // 远程状态回调函数
+static void on_remote_state(
+    const Remote::State& state,
+    void* user)
+    {
+        (void)user;
+
+        // 与订阅端配套保护现有覆盖队列。
+        taskENTER_CRITICAL();
+        (void)remote_publisher.Publish(state);
+        taskEXIT_CRITICAL();
+    }
+
+    //创建一个遥控实例
+static Remote::Remote_receiver remote_receiver(
+    on_remote_state,
+    nullptr,
+    Remote::koffline_timeout_ms);
+
+
 void uart3RxProcessTask(void *argument){
 
     (void)argument;
+    uint32_t wait_ticks = pdMS_TO_TICKS(10U);
+
+    if (wait_ticks == 0U) {
+        wait_ticks = 1U;
+    }
+
     for(;;){
         osSemaphoreAcquire(uart3_rx_semaphore, osWaitForever);
         
         UartPort::Packet packet{};
+        remote_receiver.poll(HAL_GetTick());
         while(uart3_port.Read(packet)){
-            uart3_port.write(packet.data, packet.len);
+           remote_receiver.feed(packet.data, packet.len, HAL_GetTick());
         }
+        remote_receiver.poll(HAL_GetTick());
     }
 }
 
