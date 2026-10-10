@@ -26,8 +26,7 @@ static uint8_t djiSlotFromidx(const uint32_t tx_id, const uint32_t rx_id){
 
 void packDJIMotorCanMsg(const uint32_t tx_id, const uint32_t motor_ids[],
                         const int16_t commands[], const uint8_t motor_count,
-                        uint8_t data[8], uint8_t &len){
-    len = 8;
+                        uint8_t data[8]){
     if(motor_count <= 0) return;
 
     for(uint8_t i = 0; i < 8; ++i){
