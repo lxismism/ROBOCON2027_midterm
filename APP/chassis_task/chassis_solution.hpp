@@ -9,7 +9,7 @@
  * 
  */
 #pragma once
-#include "Motor.hpp"
+#include "MotorBase.hpp"
 #include "topic_pool.h"
 #include <cmath>
 #include <array>

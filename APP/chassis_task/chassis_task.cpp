@@ -10,7 +10,7 @@
  */
 #include "chassis_task.h"
 #include "chassis_solution.hpp"
-#include "Motor.hpp"
+#include "MotorBase.hpp"
 #include "com_config.h"
 
 osThreadId_t Chassis_TaskHandle;
