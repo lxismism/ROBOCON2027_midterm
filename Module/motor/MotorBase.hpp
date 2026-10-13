@@ -24,7 +24,7 @@ class MotorBase{
 public:
     MotorBase() = default;
 
-    enum class PIDMode : uint8_t { NONE = 0, SPEED, DEGREE};
+    enum class OutputType : uint8_t { NONE = 0, SPEED, DEGREE};
 
     void setMotorCmd(float cmd){
         if(cmd > max_cmd_){
@@ -42,16 +42,19 @@ public:
 
 
     void pidDegUpdate(void) {
-            ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ref_deg_);
+        ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ref_deg_);
     }
 
     void pidDegSpeedUpdate(void){
         cmd_ = PID_Calculate(&deg_speed_pid_, deg_speed_, ref_deg_speed_);
     }
 
-    void pidUpdate(void){
-        if(output_type_ == PIDMode::DEGREE ) pidDegUpdate();
-        if(output_type_ != PIDMode::NONE) pidDegSpeedUpdate();
+    void Update(void){
+        
+            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
+            //目前只做了串级pid
+        
     }
 
     float getSingleDeg(void) const { return single_deg_; }
@@ -76,7 +79,7 @@ protected:
 
     PID_t deg_speed_pid_{};
     PID_t deg_pid_{};
-    PIDMode output_type_{};
+    OutputType output_type_{};
 };
 
 

@@ -19,7 +19,7 @@
 class C610Motor : public CanDevice , public MotorBase {
 public:
 
-    C610Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const PIDMode output_type,
+    C610Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 36.0f / 1.0f, float max_cmd = 10000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 10000.0f, float speed_Integral_Limit = 10000.0f,
               uint16_t pid_speed_improve = NONE,
@@ -95,7 +95,7 @@ private:
 
 class C620Motor : public CanDevice , public MotorBase {
 public:
-    C620Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const PIDMode output_type,
+    C620Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 3591.0f / 187.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
               uint16_t pid_speed_improve = NONE,

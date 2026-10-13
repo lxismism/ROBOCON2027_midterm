@@ -46,25 +46,25 @@ CanBus fdcan1_bus(hfdcan1);
 osThreadId_t can2Send_TaskHandle;
 CanBus fdcan2_bus(hfdcan2);
 
-VESCMotor chassis_drivemotor1(&fdcan1_bus, 101, MotorBase::PIDMode::SPEED, 
+VESCMotor chassis_drivemotor1(&fdcan1_bus, 101, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f, 1.0f, 20000.0f, 0.005f,
     1.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter);
 
-VESCMotor chassis_drivemotor2(&fdcan1_bus, 102, MotorBase::PIDMode::SPEED, 
+VESCMotor chassis_drivemotor2(&fdcan1_bus, 102, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT,VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.005f,
     1.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter);
 
-VESCMotor chassis_drivemotor3(&fdcan1_bus, 103, MotorBase::PIDMode::SPEED, 
+VESCMotor chassis_drivemotor3(&fdcan1_bus, 103, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.005f,
     1.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter);
 
-VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::PIDMode::SPEED, 
+VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.005f,
     1.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
@@ -77,25 +77,25 @@ std::array<MotorBase*, 4> chassis_drivemotors{&chassis_drivemotor1, &chassis_dri
 
 
 C620Motor chassis_dirmotor1(&fdcan1_bus, 0x201, false, 0x200, false, 
-    MotorBase::PIDMode::DEGREE, 8.0f,20000.0f, 0.005f,
+    MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter,
     5.0f);
 
 C620Motor chassis_dirmotor2(&fdcan1_bus, 0x202, false, 0x200, false, 
-    MotorBase::PIDMode::DEGREE, 8.0f,20000.0f, 0.005f,
+    MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter,
     5.0f);
 
 C620Motor chassis_dirmotor3(&fdcan1_bus, 0x203, false, 0x200, false, 
-    MotorBase::PIDMode::DEGREE, 8.0f,20000.0f, 0.005f,
+    MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter,
     5.0f);
 
 C620Motor chassis_dirmotor4(&fdcan1_bus, 0x204, false, 0x200, false, 
-    MotorBase::PIDMode::DEGREE, 8.0f,20000.0f, 0.005f,
+    MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 20000.0f, 20000.0f,
     OutputFilter,
     5.0f);
@@ -106,7 +106,7 @@ std::array<MotorBase*, 4> chassis_dirmotors{&chassis_dirmotor1, &chassis_dirmoto
 /*-------------------------------------fdcan2----------------------------------------*/
 
 C610Motor extend_motor(&fdcan2_bus, 0x202, false, 0x200, false, 
-    MotorBase::PIDMode::DEGREE, 36.0f,10000.0f, 0.005f,
+    MotorBase::OutputType::DEGREE, 36.0f,10000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 10000.0f, 10000.0f,
     OutputFilter,
     5.0f);
@@ -242,10 +242,10 @@ void can1SendTask(void *argument){
     TickType_t current = xTaskGetTickCount();
 
     for(;;){        
-        chassis_dirmotor1.pidUpdate();
-        chassis_dirmotor2.pidUpdate();
-        chassis_dirmotor3.pidUpdate();
-        chassis_dirmotor4.pidUpdate();
+        chassis_dirmotor1.Update();
+        chassis_dirmotor2.Update();
+        chassis_dirmotor3.Update();
+        chassis_dirmotor4.Update();
 
         uint8_t data[8] = {0};
         CanBus::ClassicPack pack = {};
@@ -267,7 +267,7 @@ void can1SendTask(void *argument){
         fdcan1_bus.addCanMsg(pack);
         
         {
-            chassis_drivemotor1.pidUpdate();
+            chassis_drivemotor1.Update();
             CanBus::ClassicPack pack = {};  
             pack.id = (chassis_drivemotor1.getCommandID() << 8) |
                 (chassis_drivemotor1.getID() & 0xFFU);      
@@ -281,7 +281,7 @@ void can1SendTask(void *argument){
         // vTaskDelayUntil(&current, 1);
 
         {
-            chassis_drivemotor2.pidUpdate();
+            chassis_drivemotor2.Update();
             CanBus::ClassicPack pack = {};  
             pack.id = (chassis_drivemotor2.getCommandID() << 8) |
                 (chassis_drivemotor2.getID() & 0xFFU);      
@@ -295,7 +295,7 @@ void can1SendTask(void *argument){
         // vTaskDelayUntil(&current, 1);
 
         {
-            chassis_drivemotor3.pidUpdate();
+            chassis_drivemotor3.Update();
             CanBus::ClassicPack pack = {};  
             pack.id = (chassis_drivemotor3.getCommandID() << 8) |
                 (chassis_drivemotor3.getID() & 0xFFU);      
@@ -309,7 +309,7 @@ void can1SendTask(void *argument){
         // vTaskDelayUntil(&current, 1);
 
         {
-            chassis_drivemotor4.pidUpdate();
+            chassis_drivemotor4.Update();
             CanBus::ClassicPack pack = {};  
             pack.id = (chassis_drivemotor4.getCommandID() << 8) |
                 (chassis_drivemotor4.getID() & 0xFFU);      
@@ -333,7 +333,7 @@ void can2SendTask(void *argument){
     TickType_t current = xTaskGetTickCount();
 
     for(;;){        
-        extend_motor.pidUpdate();
+        extend_motor.Update();
 
         uint8_t data[8]{};
         uint32_t motor_ids[4] = {0, 0x202, 0, 0};
