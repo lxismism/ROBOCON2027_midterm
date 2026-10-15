@@ -146,6 +146,7 @@ void CanBus::processRxInterrupt(uint32_t fifo){
         if(device_[i] == nullptr) continue;
         
         if(device_[i]->matchRx(rx_header)){
+            device_[i]->markRx();
             device_[i]->onRx(data, len);
         }
     }

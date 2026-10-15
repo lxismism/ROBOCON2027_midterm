@@ -68,7 +68,7 @@ protected:
 
     static constexpr uint32_t kDefaultRxTimeoutMs = 10;
     uint32_t rx_timeout_ms_{kDefaultRxTimeoutMs};
-    uint32_t last_rx_tick_{};
+    volatile int32_t last_rx_tick_{};
 
 
 };

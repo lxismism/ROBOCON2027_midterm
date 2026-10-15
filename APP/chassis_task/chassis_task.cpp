@@ -29,6 +29,7 @@ bool flag = false;
 void chassisTask(void *argument){
     
     TickType_t current = xTaskGetTickCount();
+    vTaskDelayUntil(&current, 20);
 
     for(;;)
     {

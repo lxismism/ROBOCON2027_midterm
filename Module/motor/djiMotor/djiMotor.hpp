@@ -1,6 +1,6 @@
 /**
  * @file djiMotor.hpp
- * @author lxlx (1729649497@qq.com)
+ * @author your name (you@domain.com)
  * @brief 
  * @version 0.1
  * @date 2026-10-10
@@ -22,9 +22,9 @@ public:
     C610Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 36.0f / 1.0f, float max_cmd = 10000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 10000.0f, float speed_Integral_Limit = 10000.0f,
-              uint16_t pid_speed_improve = NONE,
+              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
               float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_output=5000.0f, float deg_Integral_Limit=5000.0f,
-              uint16_t pid_deg_improve = NONE)
+              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
                 reduction_ratio_ = reduction;
@@ -39,14 +39,19 @@ public:
 
                 deg_speed_pid_.Output_LPF_RC = output_filter_rc;
                 deg_speed_pid_.Improve = pid_speed_improve;
+                deg_speed_pid_.DeadBand = speed_deadband;
+
                 
                 deg_pid_.Kp = deg_kp;
                 deg_pid_.Ki = deg_ki;
                 deg_pid_.Kd = deg_kd;
                 deg_pid_.Maxout = deg_max_output;
                 deg_pid_.IntegralLimit = deg_Integral_Limit;
+
+                deg_pid_.Output_LPF_RC = output_filter_rc;
                 deg_pid_.Improve = pid_deg_improve;
-                
+                deg_pid_.DeadBand = deg_deadband;
+
 
             }
 
@@ -82,6 +87,13 @@ public:
 
     float cmdTrans() { return cmd_; }
 
+    void update(void){
+        if(!isOffline()){
+            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
+            //目前只做了串级pid
+        }
+    }
 
 private:
     static constexpr float kCurToTorque = 0.18f;
@@ -98,9 +110,9 @@ public:
     C620Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 3591.0f / 187.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
-              uint16_t pid_speed_improve = NONE,
+              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
               float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float max_deg=5000.0f, float deg_max_IL=5000.0f,
-              uint16_t pid_deg_improve = NONE)
+              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
                 reduction_ratio_ = reduction;
@@ -115,14 +127,18 @@ public:
 
                 deg_speed_pid_.Output_LPF_RC = output_filter_rc;
                 deg_speed_pid_.Improve = pid_speed_improve;
+                deg_speed_pid_.DeadBand = speed_deadband;
+
                 
                 deg_pid_.Kp = deg_kp;
                 deg_pid_.Ki = deg_ki;
                 deg_pid_.Kd = deg_kd;
                 deg_pid_.Maxout = max_deg;
                 deg_pid_.IntegralLimit = deg_max_IL;
-                deg_pid_.Improve = pid_deg_improve;
 
+                deg_pid_.Output_LPF_RC = output_filter_rc;
+                deg_pid_.Improve = pid_deg_improve;
+                deg_pid_.DeadBand = deg_deadband;
             }
 
 
@@ -167,7 +183,13 @@ public:
 
     float cmdTrans() { return cmd_ * 16384.0f / 20000.0f;}
 
-
+    void update(void){
+        if(!isOffline()){
+            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
+            //目前只做了串级pid
+        }
+    }
 private:
     bool is_encoder_init = false;
 

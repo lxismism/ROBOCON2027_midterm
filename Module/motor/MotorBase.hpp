@@ -49,13 +49,6 @@ public:
         cmd_ = PID_Calculate(&deg_speed_pid_, deg_speed_, ref_deg_speed_);
     }
 
-    void Update(void){
-        
-            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
-            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
-            //目前只做了串级pid
-        
-    }
 
     float getSingleDeg(void) const { return single_deg_; }
     float getSumDeg(void) const { return sum_deg_; }

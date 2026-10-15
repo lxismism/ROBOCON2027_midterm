@@ -41,6 +41,8 @@ typedef struct{
     float IntegralLimit;
     float Maxout;
 
+    float DeadBand;
+
     uint32_t DWT_CNT;
     float dt;
 
@@ -48,7 +50,6 @@ typedef struct{
     uint16_t Improve;
 } PID_t;
 
-void PID_Init(PID_t *pid);
 float PID_Calculate(PID_t *pid, float measure, float ref);
 
 #ifdef __cplusplus

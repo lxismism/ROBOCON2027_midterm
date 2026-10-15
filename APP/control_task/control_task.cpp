@@ -43,21 +43,21 @@ void Remote_Data_Process()
     const float right_x = static_cast<float>(Remote::get_channel(sub_remote_data, Remote::Channel::RIGHT_X));
     const float right_y = static_cast<float>(Remote::get_channel(sub_remote_data, Remote::Channel::RIGHT_Y));
     
-    if(std::fabs(left_x) < 125.0f){
+    if(std::fabs(left_x) < 850.0f){
         chassis_cmd.linear_x_ = 0.0f;
     } else{
         chassis_cmd.linear_x_ = math_utils::Map(left_x, -kMaxCh, 
             kMaxCh, -kMaxSpeed, kMaxSpeed); 
     }
 
-    if(std::fabs(left_y) < 125.0f){
+    if(std::fabs(left_y) < 850.0f){
         chassis_cmd.linear_y_ = 0.0f;
     } else{
         chassis_cmd.linear_y_ = math_utils::Map(left_y, -kMaxCh, 
             kMaxCh, -kMaxSpeed, kMaxSpeed); 
     }
 
-    if(std::fabs(right_x) < 125.0f){
+    if(std::fabs(right_x) < 850.0f){
         chassis_cmd.omega_ = 0.0f;
     } else{
         chassis_cmd.omega_ = math_utils::Map(right_x, -kMaxCh, 
