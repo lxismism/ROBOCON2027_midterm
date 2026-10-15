@@ -18,6 +18,7 @@
 
 #include "memory_map.h"
 #include "UartPort.hpp"
+#include "WitMotionimu.hpp"
 
 #include "Canbus.hpp"
 #include "MotorBase.hpp"
@@ -125,7 +126,25 @@ C610Motor extend_motor(&fdcan3_bus, 0x202, false, 0x200, false,
 
 /*-------------------------------------fdcan3----------------------------------------*/
 
+/*-------------------------------------usart2----------------------------------------*/
+osThreadId_t uart2Process_TaskHandle;
 
+void onUart2RxCb(const uint8_t *data, size_t len, void *user);
+
+DMA_BUFFER_ATTR static uint8_t uart2_rx_dma[64];
+DMA_BUFFER_ATTR static uint8_t uart2_tx_dma[64];
+
+
+UartPort uart2_port(&huart2, uart2_rx_dma, sizeof(uart2_rx_dma),
+                    uart2_tx_dma, sizeof(uart2_tx_dma), onUart2RxCb, nullptr);
+
+osSemaphoreId_t uart2_rx_semaphore = NULL;
+
+WitMotionimu wit_imu{};
+
+static TypedTopicPublisher<pub_imu_data> imu_data_pub("imu_data");
+static pub_imu_data imu_data{};
+/*-------------------------------------usart2----------------------------------------*/
 
 /*-------------------------------------usart3----------------------------------------*/
 osThreadId_t uart3Process_TaskHandle;
@@ -141,12 +160,13 @@ UartPort uart3_port(&huart3, uart3_rx_dma, sizeof(uart3_rx_dma),
 
 osSemaphoreId_t uart3_rx_semaphore = NULL;
 
-/*-------------------------------------usart----------------------------------------*/
+
+/*-------------------------------------usart3----------------------------------------*/
 
 uint8_t comServiceInit(){
 
     canFilterInit(&hfdcan1, FDCAN_EXTENDED_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO0, 0);
-    canFilterInit(&hfdcan1, FDCAN_EXTENDED_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO1, 1);
+    canFilterInit(&hfdcan1, FDCAN_STANDARD_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO1, 1);
     bspCanInit(&hfdcan1);
 
     canFilterInit(&hfdcan2, FDCAN_STANDARD_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO0, 0);
@@ -173,6 +193,8 @@ uint8_t comServiceInit(){
     
     fdcan3_bus.registerDevice(&extend_motor);
 
+    uart2_rx_semaphore = osSemaphoreNew(1, 0, NULL);
+    uart2_port.startRxDmaIdle();
 
     uart3_rx_semaphore = osSemaphoreNew(1, 0, NULL);
     uart3_port.startRxDmaIdle();
@@ -183,6 +205,36 @@ uint8_t comServiceInit(){
     return 0;
 }
 
+
+
+/*-------------------------------------usart2----------------------------------------*/
+void onUart2RxCb(const uint8_t *data, size_t len, void *user){
+    (void)user;
+    if(data != nullptr && len > 0 && uart2_rx_semaphore != nullptr){
+        osSemaphoreRelease(uart2_rx_semaphore);
+    }
+}
+
+void uart2RxProcessTask(void *argument){
+
+    (void)argument;
+    for(;;){
+        osSemaphoreAcquire(uart2_rx_semaphore, osWaitForever);
+        
+        UartPort::Packet packet{};
+        while(uart2_port.Read(packet)){
+            for(uint8_t i = 0; i < packet.len; ++i){
+                uint8_t frame_type = wit_imu.processByte(packet.data[i]);
+                if(frame_type == 0x53){
+                    imu_data = wit_imu.getImuData();
+                    imu_data_pub.Publish(imu_data);
+                }
+            }
+        }
+    }
+}
+
+/*-------------------------------------usart2----------------------------------------*/
 
 /*-------------------------------------usart3----------------------------------------*/
 void onUart3RxCb(const uint8_t *data, size_t len, void *user){
