@@ -49,7 +49,13 @@ public:
         return (rx_header.Identifier == id_);
     }
 
+    void markRx(void){ last_rx_tick_ = HAL_GetTick(); }
+    bool isOffline() const { return ( HAL_GetTick() - last_rx_tick_ ) > rx_timeout_ms_; }
+    uint32_t getLastRxTick(){ return last_rx_tick_; }
+    void setRxTimeoutMs(uint32_t ms) { rx_timeout_ms_ = ms; }
+
     uint32_t getID(){ return id_; }
+    uint32_t getTxID(){ return tx_id_; }
 
     
 
@@ -59,6 +65,11 @@ protected:
     bool is_extid_;
     uint32_t tx_id_;
     bool tx_is_extid_;
+
+    static constexpr uint32_t kDefaultRxTimeoutMs = 10;
+    uint32_t rx_timeout_ms_{kDefaultRxTimeoutMs};
+    volatile int32_t last_rx_tick_{};
+
 
 };
 

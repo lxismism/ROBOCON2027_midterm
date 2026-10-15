@@ -54,14 +54,14 @@ namespace Remote{
 
 
     struct State{
-        uint16_t ch[4]{};//摇杆的四个通道
+        int16_t ch[4]{};//摇杆的四个通道
         uint16_t key{};//按键的状态
 
         uint8_t page{};//当前的按键页码
         uint8_t display_color{};//当前的显示颜色
         uint8_t online{};//当前的在线状态
 
-         uint32_t last_rx_ms{};//上一次接收的时间戳
+        uint32_t last_rx_ms{};//上一次接收的时间戳
     };
 
 
@@ -127,8 +127,7 @@ namespace Remote{
         using State_callback = void(*)(const State &state, void *user);
 
         explicit Remote_receiver(State_callback callback = nullptr,
-             void *user = nullptr, 
-             uint32_t timeout_ms = koffline_timeout_ms);
+            void *user = nullptr, uint32_t timeout_ms = koffline_timeout_ms);
         
 
         //输入任意长度的串口数据块

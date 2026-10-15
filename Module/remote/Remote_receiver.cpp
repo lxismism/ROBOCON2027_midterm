@@ -1,7 +1,7 @@
 #include "Remote_receiver.hpp"
 #include <cstdint>
 #include <cstring>
-
+#include "math_utils.hpp"
 
 namespace Remote{  
     Remote_receiver::Remote_receiver(
@@ -104,7 +104,16 @@ namespace Remote{
         next.ch[0] = reverse_channel(read_uint16(frame_+2));
         next.ch[1] = reverse_channel(read_uint16(frame_+4));
         next.ch[2] = read_uint16(frame_+6);
-        next.ch[3] = read_uint16(frame_+8);
+
+        if(read_uint16(frame_+8)<1824)
+        {
+            next.ch[3] = read_uint16(frame_+8)*(2048/1600)-(2048/8);
+        }else{
+            next.ch[3] = read_uint16(frame_+8)+224;
+
+        }
+       
+
 
         next.key = read_uint16(frame_+10);
         next.page = frame_[12];

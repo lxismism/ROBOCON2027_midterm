@@ -38,13 +38,13 @@ public:
         CAN_PACKET_STATUS_6 = 58U
     };
 
-    VESCMotor(CanBus *manager, uint32_t id, const PIDMode output_type, 
+    VESCMotor(CanBus *manager, uint32_t id, const OutputType output_type, 
         const uint8_t command_id = CAN_PACKET_SET_CURRENT, const uint8_t status_id = CAN_PACKET_STATUS,
         float num_of_pole_pairs = 21.0f, float reduction = 1.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
         float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
-        float pid_speed_improve = NONE,
+        float pid_speed_improve = NONE, float speed_deadband = 0.001f,
         float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float max_deg=2000.0f, float deg_max_IL=2000.0f,
-        float pid_deg_improve = NONE)
+        float pid_deg_improve = NONE, float deg_deadband = 0.001f)
         : CanDevice(manager, id, true, id, true){
 
                 num_of_pole_pairs_ = num_of_pole_pairs;
@@ -62,6 +62,7 @@ public:
 
                 deg_speed_pid_.Output_LPF_RC = output_filter_rc;
                 deg_speed_pid_.Improve = pid_speed_improve;
+                deg_speed_pid_.DeadBand = speed_deadband;
                 
                 deg_pid_.Kp = deg_kp;
                 deg_pid_.Ki = deg_ki;
@@ -69,7 +70,10 @@ public:
                 deg_pid_.Maxout = max_deg;
                 deg_pid_.IntegralLimit = deg_max_IL;
 
+
+                deg_pid_.Output_LPF_RC = output_filter_rc;
                 deg_pid_.Improve = pid_deg_improve;
+                deg_pid_.DeadBand = deg_deadband;
                 
 
             }
@@ -119,6 +123,13 @@ public:
 
     float cmdTrans() { return cmd_ ; }
     
+    void update(void){
+        if(!isOffline()){
+            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
+            //目前只做了串级pid
+        }
+    }
 
 private:
     uint8_t command_id_;

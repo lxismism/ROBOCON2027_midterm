@@ -9,12 +9,16 @@
  * 
  */
 #pragma once
+
 #include "MotorBase.hpp"
+#include "CanBus.hpp"
+#include "djiMotor.hpp"
+#include "vescMotor.hpp"
+
 #include "topic_pool.h"
 #include <cmath>
 #include <array>
 
-static constexpr float kPI = 3.1415926535f;
 struct Velocity_t{
     float dir;
     float speed;
@@ -69,9 +73,22 @@ public:
         degspeed_output = (target_velocity.speed) * RAD_2_DEG * kWheelDriveReduction / kWheelRadmeter; 
 
         dirmotor_->setMotorDeg(deg_output);
-        drivemotor_->setMotorDegSpeed(degspeed_output);
+
+        const float steer_err = deg_output - dirmotor_->getSumDeg();
+        const float abs_err = ((steer_err > 0.0f) ? steer_err : -steer_err);
+
+        if(abs_err < kAlionErr){
+            alion_cnt_++;
+        }
+        else alion_cnt_ = 0U;
+
+        const bool steer_ready = alion_cnt_ >= kAlionTick ? true : false;
+        drivemotor_->setMotorDegSpeed(steer_ready ? degspeed_output : 0.0f);
+
+
+
     }
-    
+
 
 
 private:
@@ -81,12 +98,19 @@ private:
     static constexpr float kWheelDriveReduction = 1.0f;     //电机输出轴->驱动轮的减速比
     static constexpr float kWheelDirReduction = 1.0f;       //电机输出轴->舵向轮的减速比
 
+    static constexpr float kAlionErr = 10.0f;
+    static constexpr uint32_t kAlionTick = 1U;
+    uint32_t alion_cnt_{0U};
+
     MotorBase* dirmotor_{};
     MotorBase* drivemotor_{};
 
     Velocity_t current_velocity_{};
     Velocity_t last_velocity_{};
     float wheel_sum_deg_{0.0f};
+
+
+    
 
     void updateWheelState(){
 
@@ -130,9 +154,9 @@ public:
         velocitys_[2].dir = std::atan2(vy - omega * kx , vx + omega * ky) * RAD_2_DEG;
         velocitys_[3].dir = std::atan2(vy + omega * kx , vx + omega * ky) * RAD_2_DEG;
 
-        if(std::fabs(vx) < 0.00001f &&
-           std::fabs(vy) < 0.00001f &&
-           std::fabs(omega) < 0.00001f){
+        if(std::fabs(vx) < 0.01f &&
+           std::fabs(vy) < 0.01f &&
+           std::fabs(omega) < 0.01f){
             velocitys_[0].dir = 135.0f;
             velocitys_[1].dir = -135.0f;
             velocitys_[2].dir = -45.0f;
@@ -143,13 +167,11 @@ public:
             steerwheels_[i].setVelocity(velocitys_[i]);
         }
 
-
     }
 
 
 
 private:
-
 
     static constexpr float kWheelbase = 1.0f;   //轴距
     static constexpr float kWheeltrack = 1.0f;  //轮距

@@ -18,6 +18,7 @@ extern "C"{
 
 /*----------------------------------function----------------------------------*/
 uint8_t comServiceInit();
+void uart2RxProcessTask(void *argument);
 void uart3RxProcessTask(void *argument);
 
 void can1SendTask(void *argument);

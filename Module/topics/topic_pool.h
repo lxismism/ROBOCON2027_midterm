@@ -22,4 +22,10 @@ typedef struct{
     float omega_;
 } pub_chassis_cmd;
 
+typedef struct{
+  float roll_deg;   // 滚转角
+  float pitch_deg; // 俯仰角
+  float yaw_deg;  // 偏航角，绕Z轴旋转，范围 -π ~ +π
+} pub_imu_data;
+
 #pragma pack()
