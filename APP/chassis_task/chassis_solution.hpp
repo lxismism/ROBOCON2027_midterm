@@ -75,17 +75,8 @@ public:
         dirmotor_->setMotorDeg(deg_output);
 
         const float steer_err = deg_output - dirmotor_->getSumDeg();
-        const float abs_err = ((steer_err > 0.0f) ? steer_err : -steer_err);
-
-        if(abs_err < kAlionErr){
-            alion_cnt_++;
-        }
-        else alion_cnt_ = 0U;
-
-        const bool steer_ready = alion_cnt_ >= kAlionTick ? true : false;
-        drivemotor_->setMotorDegSpeed(steer_ready ? degspeed_output : 0.0f);
-
-
+        const float drive_scale = std::fmaxf(0.0f, std::cos(steer_err * DEG_2_RAD));
+        drivemotor_->setMotorDegSpeed(degspeed_output * drive_scale);
 
     }
 
@@ -100,7 +91,6 @@ private:
 
     static constexpr float kAlionErr = 10.0f;
     static constexpr uint32_t kAlionTick = 1U;
-    uint32_t alion_cnt_{0U};
 
     MotorBase* dirmotor_{};
     MotorBase* drivemotor_{};
@@ -108,9 +98,6 @@ private:
     Velocity_t current_velocity_{};
     Velocity_t last_velocity_{};
     float wheel_sum_deg_{0.0f};
-
-
-    
 
     void updateWheelState(){
 
@@ -121,6 +108,8 @@ private:
         current_velocity_.speed = drivemotor_->getDegSpeed() * DEG_2_RAD * kWheelRadmeter / kWheelDriveReduction;
         
     }
+
+
 
 };
 
@@ -148,6 +137,7 @@ public:
                                      (vy - omega * kx) * (vy - omega * kx));
         velocitys_[3].speed = -std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
                                      (vy + omega * kx) * (vy + omega * kx));
+        desaturate();
         
         velocitys_[0].dir = std::atan2(vy + omega * kx , vx - omega * ky) * RAD_2_DEG;
         velocitys_[1].dir = std::atan2(vy - omega * kx , vx - omega * ky) * RAD_2_DEG;
@@ -180,7 +170,30 @@ private:
     static constexpr float ky = kWheelbase / 2.0f;  //ky的含义是，点到x轴的距离
     static constexpr float kx = kWheeltrack / 2.0f; //kx的含义是，点到y轴的距离
 
+    static constexpr float kWheelMaxSpeed = 2.5f;
+
     SteerWheel steerwheels_[kWheelNum]{};
     Velocity_t velocitys_[kWheelNum]{};
+
+    void desaturate(){
+        float max_speed = 0.0f;
+        
+        for(uint8_t i = 0; i < kWheelNum; ++i){
+            const float speed = std::fabs(velocitys_[i].speed);
+            if(speed > max_speed){
+                max_speed = speed;
+            }
+        }
+
+        if(max_speed < kWheelMaxSpeed){
+            return;
+        }
+
+        const float scale = kWheelMaxSpeed / max_speed;
+        for(uint8_t i = 0; i < kWheelNum; ++i){
+            velocitys_[i].speed *= scale;
+        }
+
+    }
 
 };

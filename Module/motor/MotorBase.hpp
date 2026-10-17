@@ -49,6 +49,13 @@ public:
         cmd_ = PID_Calculate(&deg_speed_pid_, deg_speed_, ref_deg_speed_);
     }
 
+    void resetPids(void){
+        PID_Reset(&deg_pid_);
+        PID_Reset(&deg_speed_pid_);
+    }
+
+    
+
 
     float getSingleDeg(void) const { return single_deg_; }
     float getSumDeg(void) const { return sum_deg_; }

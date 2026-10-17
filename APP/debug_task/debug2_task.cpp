@@ -15,14 +15,17 @@
 #include "debug1_task.h"
 #include "debug2_task.h"
 #include "topics.hpp"
+#include "com_config.h"
+#include "djiMotor.hpp"
 
 osThreadId_t Debug2_TaskHandle;
-
+extern C610Motor extend_motor;
 
 void debug2Task(void *argument){
     TickType_t currentTime = xTaskGetTickCount();
 
     for(;;){
+        
 
         vTaskDelayUntil(&currentTime, 5);
     }
