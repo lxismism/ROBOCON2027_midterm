@@ -39,26 +39,26 @@ CanBus fdcan1_bus(hfdcan1);
 
 VESCMotor chassis_drivemotor1(&fdcan1_bus, 101, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
-    21.0f, 1.0f, 20000.0f, 0.005f,
-    11.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
+    21.0f, 1.0f, 20000.0f, 0.0f,
+    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor2(&fdcan1_bus, 102, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT,VESCMotor::CAN_PACKET_STATUS,
-    21.0f,1.0f, 20000.0f, 0.005f,
-    11.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
+    21.0f,1.0f, 20000.0f, 0.0f,
+    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor3(&fdcan1_bus, 103, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
-    21.0f,1.0f, 20000.0f, 0.005f,
-    11.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
+    21.0f,1.0f, 20000.0f, 0.00f,
+    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
-    21.0f,1.0f, 20000.0f, 0.005f,
-    11.5f, 0.5f, 0.0f, 20000.0f, 20000.0f,
+    21.0f,1.0f, 20000.0f, 0.0f,
+    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 
@@ -75,7 +75,6 @@ std::array<MotorBase*, 4> chassis_drivemotors{&chassis_drivemotor1, &chassis_dri
 /*-------------------------------------fdcan2----------------------------------------*/
 osThreadId_t can2Send_TaskHandle;
 CanBus fdcan2_bus(hfdcan2);
-
 
 C620Motor chassis_dirmotor1(&fdcan2_bus, 0x201, false, 0x200, false, 
     MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.01f,
@@ -109,7 +108,7 @@ std::array<MotorBase*, 4> chassis_dirmotors{&chassis_dirmotor1, &chassis_dirmoto
                                             &chassis_dirmotor3, &chassis_dirmotor4};
                                             
 
-/*-------------------------------------fdcan3----------------------------------------*/
+/*-------------------------------------fdcan2----------------------------------------*/
 
 osThreadId_t can3Send_TaskHandle;
 CanBus fdcan3_bus(hfdcan3);

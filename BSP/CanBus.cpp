@@ -229,3 +229,13 @@ extern "C" void HAL_FDCAN_ErrorCallback(FDCAN_HandleTypeDef *hfdcan){
 }
 
 
+extern "C" void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan,
+                                              uint32_t ErrorStatusITs)
+{
+    if ((ErrorStatusITs & FDCAN_IT_BUS_OFF) != 0U)
+    {
+        hfdcan->Instance->CCCR |=  FDCAN_CCCR_INIT;
+        (void)hfdcan->Instance->CCCR;
+        hfdcan->Instance->CCCR &= ~FDCAN_CCCR_INIT;
+    }
+}

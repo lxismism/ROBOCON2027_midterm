@@ -36,7 +36,7 @@ static pub_chassis_cmd chassis_cmd{};
 void Remote_Data_Process()
 {
     static constexpr float kMaxCh = 2048.0f;
-    static constexpr float kMaxSpeed = 1.5f;
+    static constexpr float kMaxSpeed = 1.0f;
 
     const float left_x = static_cast<float>(Remote::get_channel(sub_remote_data, Remote::Channel::LEFT_X));
     const float left_y = static_cast<float>(Remote::get_channel(sub_remote_data, Remote::Channel::LEFT_Y));
@@ -61,7 +61,7 @@ void Remote_Data_Process()
         chassis_cmd.omega_ = 0.0f;
     } else{
         chassis_cmd.omega_ = math_utils::Map(right_x, -kMaxCh, 
-            kMaxCh, -kPI, kPI); 
+            kMaxCh, -kPI / 2.0f, kPI / 2.0f);
     }
     
 }
