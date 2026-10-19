@@ -1,64 +1,76 @@
 @echo off
-chcp 65001 > nul
-title STM32H723 DAPLink è°ƒè¯•æœåŠ¡å™¨å¯åŠ¨å™¨
+title STM32H723 DAPLink µ÷ÊÔ·þÎñÆ÷Æô¶¯Æ÷
 
-REM ===================== ã€é…ç½®åŒºã€‘ =====================
-REM 1. OpenOCD æ ¹ç›®å½•ï¼ˆç»å¯¹è·¯å¾„ï¼Œåˆ°æ–‡ä»¶å¤¹ä¸ºæ­¢ï¼Œä¸è¦åˆ° binï¼‰
-REM    ä¸‹é¢ä¸¤ä¸ªæ˜¯æœ¬æœºå·²çŸ¥çš„å®‰è£…ä½ç½®ï¼Œè„šæœ¬ä¼šä¾æ¬¡å°è¯•ï¼›æ¢ç”µè„‘æ—¶æŠŠä½ è‡ªå·±çš„è·¯å¾„åŠ è¿›æ¥å³å¯
+REM ===================== ¡¾ÅäÖÃÇø¡¿ =====================
+REM 1. OpenOCD ¸ùÄ¿Â¼£¨¾ø¶ÔÂ·¾¶£¬µ½ÎÄ¼þ¼ÐÎªÖ¹£¬²»Òªµ½ bin£©
+REM    ÏÂÃæÁ½¸öÊÇ±¾»úÒÑÖªµÄ°²×°Î»ÖÃ£¬½Å±¾»áÒÀ´Î³¢ÊÔ£»»»µçÄÔÊ±°ÑÄã×Ô¼ºµÄÂ·¾¶¼Ó½øÀ´¼´¿É
 set "OPENOCD_ROOT=D:\dowm load\ozone_something\OpenOCD&ArmGCC\DevEnv\openocd-v0.12.0-i686-w64-mingw32"
 if not exist "%OPENOCD_ROOT%\bin\openocd.exe" set "OPENOCD_ROOT=D:\MyTools\OpenOCD_ArmGCC\OpenOCD&ArmGCC\DevEnv\openocd-v0.12.0-i686-w64-mingw32"
 
-REM 2. DAPLink é…ç½®æ–‡ä»¶ï¼šé»˜è®¤ç”¨ä»“åº“æ ¹ç›®å½•ä¸‹çš„ ozone_daplink.cfgï¼ˆéšå·¥ç¨‹ä¸€èµ·èµ°ï¼‰
+REM 2. DAPLink ÅäÖÃÎÄ¼þ£ºÄ¬ÈÏÓÃ²Ö¿â¸ùÄ¿Â¼ÏÂµÄ ozone_daplink.cfg£¨Ëæ¹¤³ÌÒ»Æð×ß£©
 set "DAPLINK_CFG=%~dp0ozone_daplink.cfg"
 
-REM 3. ç­‰å¾… OpenOCD å¯åŠ¨çš„æ—¶é—´ï¼ˆç§’ï¼Œä¸€èˆ¬ä¸ç”¨æ”¹ï¼‰
-set "WAIT_TIME=2"
+REM 3. µÈ´ý OpenOCD Æô¶¯µÄÊ±¼ä£¨ping ´ÎÊý£¬4 ´ÎÔ¼ 3 Ãë£¬Ò»°ã²»ÓÃ¸Ä£©
+set "WAIT_COUNT=4"
 REM ======================================================
 
-REM è‡ªåŠ¨æ‹¼æŽ¥ OpenOCD ç›¸å…³è·¯å¾„ï¼ˆæ— éœ€ä¿®æ”¹ï¼‰
+REM ×Ô¶¯Æ´½Ó OpenOCD Ïà¹ØÂ·¾¶£¨ÎÞÐèÐÞ¸Ä£©
 set "OPENOCD_EXE=%OPENOCD_ROOT%\bin\openocd.exe"
 set "TARGET_CFG=%OPENOCD_ROOT%\share\openocd\scripts\target\stm32h7x.cfg"
 
-REM æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨ï¼Œé¿å…è·¯å¾„é”™è¯¯
+REM ¼ì²éÎÄ¼þÊÇ·ñ´æÔÚ£¬±ÜÃâÂ·¾¶´íÎó
 if not exist "%OPENOCD_EXE%" (
-    echo [é”™è¯¯] æœªæ‰¾åˆ° OpenOCDï¼š%OPENOCD_EXE%
-    echo è¯·æŠŠé…ç½®åŒºçš„ OPENOCD_ROOT æ”¹æˆä½ ç”µè„‘ä¸Š openocd.exe æ‰€åœ¨æ–‡ä»¶å¤¹çš„ä¸Šçº§ç›®å½•ï¼
+    echo [´íÎó] Î´ÕÒµ½ OpenOCD£º%OPENOCD_EXE%
+    echo Çë°ÑÅäÖÃÇøµÄ OPENOCD_ROOT ¸Ä³ÉÄãµçÄÔÉÏ openocd.exe ËùÔÚÎÄ¼þ¼ÐµÄÉÏ¼¶Ä¿Â¼£¡
     pause
     exit /b 1
 )
 if not exist "%DAPLINK_CFG%" (
-    echo [é”™è¯¯] æœªæ‰¾åˆ° DAPLink é…ç½®æ–‡ä»¶ï¼š%DAPLINK_CFG%
-    echo è¯·ç¡®è®¤ ozone_daplink.cfg å’Œè¿™ä¸ª bat åœ¨åŒä¸€ä¸ªç›®å½•ä¸‹ï¼
+    echo [´íÎó] Î´ÕÒµ½ DAPLink ÅäÖÃÎÄ¼þ£º%DAPLINK_CFG%
+    echo ÇëÈ·ÈÏ ozone_daplink.cfg ºÍÕâ¸ö bat ÔÚÍ¬Ò»¸öÄ¿Â¼ÏÂ£¡
     pause
     exit /b 1
 )
 if not exist "%TARGET_CFG%" (
-    echo [é”™è¯¯] æœªæ‰¾åˆ°ç›®æ ‡èŠ¯ç‰‡é…ç½®ï¼š%TARGET_CFG%
-    echo å·¥ç¨‹æ˜¯ STM32H723ï¼Œéœ€è¦çš„æ–‡ä»¶æ˜¯ scripts\target\stm32h7x.cfgï¼Œè¯·ç¡®è®¤ OpenOCD è·¯å¾„æ­£ç¡®ï¼
+    echo [´íÎó] Î´ÕÒµ½Ä¿±êÐ¾Æ¬ÅäÖÃ£º%TARGET_CFG%
+    echo ¹¤³ÌÊÇ STM32H723£¬ÐèÒªµÄÎÄ¼þÊÇ scripts\target\stm32h7x.cfg£¬ÇëÈ·ÈÏ OpenOCD Â·¾¶ÕýÈ·£¡
     pause
     exit /b 1
 )
 
-REM 1. å¯åŠ¨ OpenOCD è°ƒè¯•æœåŠ¡å™¨
-echo æ­£åœ¨å¯åŠ¨ OpenOCD è°ƒè¯•æœåŠ¡å™¨...
+REM 1. Æô¶¯ OpenOCD µ÷ÊÔ·þÎñÆ÷
+echo ÕýÔÚÆô¶¯ OpenOCD µ÷ÊÔ·þÎñÆ÷...
 echo.
-echo è¿žæŽ¥ä¿¡æ¯ï¼š
-echo - GDB è¿žæŽ¥ç«¯å£ï¼š3333
-echo - Telnet è¿žæŽ¥ç«¯å£ï¼š4444
-echo - TCL è¿žæŽ¥ç«¯å£ï¼š6666
+echo Á¬½ÓÐÅÏ¢£º
+echo - GDB Á¬½Ó¶Ë¿Ú£º3333
+echo - Telnet Á¬½Ó¶Ë¿Ú£º4444
+echo - TCL Á¬½Ó¶Ë¿Ú£º6666
 echo.
-echo æç¤ºï¼šä¸è¦å…³é—­æ­¤çª—å£ï¼Œå¦åˆ™è°ƒè¯•ä¼šæ–­å¼€ï¼
+echo ÌáÊ¾£º²»Òª¹Ø±Õ´Ë´°¿Ú£¬·ñÔòµ÷ÊÔ»á¶Ï¿ª£¡
 echo.
 
-start "OpenOCD - STM32 è°ƒè¯•æœåŠ¡å™¨" cmd /k ""%OPENOCD_EXE%" -f "%DAPLINK_CFG%" -f "%TARGET_CFG%""
+REM ×¢Òâ£ºOPENOCD_ROOT Â·¾¶Àï´ø &£¨OpenOCD&ArmGCC£©£¬
+REM ËùÒÔÕâÀï±ØÐëÐ´³É cmd /k call "<exe>" ...£¬²»ÄÜÓÃ cmd /k ""<exe>" ..."
+REM ºóÕß»áÈÃ cmd °ÑÂ·¾¶ÀïµÄ & µ±³ÉÃüÁî·Ö¸ô·û£¬×Ó´°¿ÚÆð²»À´
+start "OpenOCD - STM32 µ÷ÊÔ·þÎñÆ÷" cmd /k call "%OPENOCD_EXE%" -f "%DAPLINK_CFG%" -f "%TARGET_CFG%"
 
-REM 2. ç­‰å¾…æœåŠ¡å™¨å¯åŠ¨
-timeout /t %WAIT_TIME% /nobreak > nul
+REM 2. µÈ´ý·þÎñÆ÷Æô¶¯
+"%SystemRoot%\System32\PING.EXE" -n %WAIT_COUNT% 127.0.0.1 > nul
 
-echo ==================================================
-echo OpenOCD è°ƒè¯•æœåŠ¡å™¨å·²å¯åŠ¨æˆåŠŸï¼
-echo çŽ°åœ¨å¯ä»¥ç”¨ Ozone / VSCode è¿žæŽ¥ localhost:3333 è¿›è¡Œè°ƒè¯•ã€‚
-echo ==================================================
+REM 3. ¼ì²é 3333 ¶Ë¿ÚÊÇ·ñÕæµÄÔÚ¼àÌý
+"%SystemRoot%\System32\netstat.exe" -ano | "%SystemRoot%\System32\findstr.exe" /C:":3333" | "%SystemRoot%\System32\findstr.exe" /C:"LISTENING" > nul
+if errorlevel 1 (
+    echo ==================================================
+    echo [¾¯¸æ] 3333 ¶Ë¿ÚÃ»ÓÐÔÚ¼àÌý£¬OpenOCD ¿ÉÄÜÃ»ÆðÀ´£¡
+    echo Çë¿´µ¯³öµÄÄÇ¸ö OpenOCD ´°¿ÚÀïµÄ´íÎóÐÅÏ¢¡£
+    echo ³£¼ûÔ­Òò£ºDAPLink Ã»²åºÃ¡¢±»±ðµÄ OpenOCD Õ¼ÓÃ¡¢Çý¶¯Ã»×°¡£
+    echo ==================================================
+) else (
+    echo ==================================================
+    echo OpenOCD µ÷ÊÔ·þÎñÆ÷ÒÑÆô¶¯³É¹¦£¡
+    echo ÏÖÔÚ¿ÉÒÔÓÃ Ozone / VSCode Á¬½Ó localhost:3333 ½øÐÐµ÷ÊÔ¡£
+    echo ==================================================
+)
 echo.
 pause
 exit /b 0

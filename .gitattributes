@@ -1,0 +1,2 @@
+# Windows 批处理必须是 CRLF，否则 cmd 解析中文（GBK）时会串行出错
+*.bat text eol=crlf
