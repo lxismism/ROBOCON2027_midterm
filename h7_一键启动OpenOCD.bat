@@ -50,7 +50,7 @@ echo.
 echo 提示：不要关闭此窗口，否则调试会断开！
 echo.
 
-start "OpenOCD - STM32 调试服务器" cmd /k ^""%OPENOCD_EXE%" -f "%DAPLINK_CFG%" -f "%TARGET_CFG%"^"
+start "OpenOCD - STM32 调试服务器" cmd /k ""%OPENOCD_EXE%" -f "%DAPLINK_CFG%" -f "%TARGET_CFG%""
 
 REM 2. 等待服务器启动
 timeout /t %WAIT_TIME% /nobreak > nul
