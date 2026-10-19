@@ -63,6 +63,11 @@ public:
     float getTorque(void) const {return torque_; }
     float getTemperature(void) const { return temperature_; }
 
+    /* 给调试/上位机看的目标值 */
+    float getRefDeg(void) const { return ref_deg_; }
+    float getRefDegSpeed(void) const { return ref_deg_speed_; }
+    float getCmd(void) const { return cmd_; }
+
 protected:
     float cmd_{0.0f};
     float ref_deg_speed_{0.0f};

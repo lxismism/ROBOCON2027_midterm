@@ -160,6 +160,15 @@ osSemaphoreId_t uart3_rx_semaphore = NULL;
 
 /*-------------------------------------usart3----------------------------------------*/
 
+/*-------------------------------------uart4----------------------------------------*/
+/* VOFA 调试串口：只发送，不需要 RX 任务 */
+DMA_BUFFER_ATTR static uint8_t uart4_rx_dma[64];
+DMA_BUFFER_ATTR static uint8_t uart4_tx_dma[512];   /* 双缓冲，每半区 256B */
+
+UartPort uart4_port(&huart4, uart4_rx_dma, sizeof(uart4_rx_dma),
+                    uart4_tx_dma, sizeof(uart4_tx_dma));
+/*-------------------------------------uart4----------------------------------------*/
+
 uint8_t comServiceInit(){
 
     canFilterInit(&hfdcan1, FDCAN_EXTENDED_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO0, 0);
