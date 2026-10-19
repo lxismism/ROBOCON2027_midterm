@@ -94,7 +94,7 @@ void osTaskInit(void)
     const osThreadAttr_t controlTaskHandle_attributes = {
         .name = "control_TaskHandle",
         .stack_size = 256 * 4,
-        .priority = (osPriority_t)osPriorityRealtime,
+        .priority = (osPriority_t)osPriorityNormal,
     };
     control_TaskHandle = osThreadNew(controlTask, NULL, &controlTaskHandle_attributes);
 

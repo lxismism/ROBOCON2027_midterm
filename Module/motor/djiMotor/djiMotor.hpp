@@ -12,7 +12,7 @@
 #pragma once
 
 #include "math_utils.hpp"
-
+#include "pid_controller.h"
 #include "MotorBase.hpp"
 #include "CanBus.hpp"
 
@@ -23,7 +23,7 @@ public:
               float reduction = 36.0f / 1.0f, float max_cmd = 10000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 10000.0f, float speed_Integral_Limit = 10000.0f,
               uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
-              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_output=5000.0f, float deg_Integral_Limit=5000.0f,
+              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_output=20000.0f, float deg_Integral_Limit=20000.0f,
               uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
@@ -92,9 +92,10 @@ public:
             if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
             if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
             //目前只做了串级pid
+        } else {
+            resetPids();
         }
     }
-
 private:
     static constexpr float kCurToTorque = 0.18f;
 
@@ -111,7 +112,7 @@ public:
               float reduction = 3591.0f / 187.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
               uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
-              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float max_deg=5000.0f, float deg_max_IL=5000.0f,
+              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_out=20000.0f, float deg_max_IL=20000.0f,
               uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
@@ -133,7 +134,7 @@ public:
                 deg_pid_.Kp = deg_kp;
                 deg_pid_.Ki = deg_ki;
                 deg_pid_.Kd = deg_kd;
-                deg_pid_.Maxout = max_deg;
+                deg_pid_.Maxout = deg_max_out;
                 deg_pid_.IntegralLimit = deg_max_IL;
 
                 deg_pid_.Output_LPF_RC = output_filter_rc;
@@ -188,8 +189,11 @@ public:
             if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
             if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
             //目前只做了串级pid
+        } else {
+            resetPids();
         }
     }
+
 private:
     bool is_encoder_init = false;
 

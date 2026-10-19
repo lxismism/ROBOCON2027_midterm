@@ -24,8 +24,6 @@ SteerChassis SteerChassis_solver(chassis_dirmotors, chassis_drivemotors);
 static TypedTopicSubscriber<pub_chassis_cmd> chassis_cmd_sub("chassis_cmd", 8U);
 static pub_chassis_cmd chassis_cmd{};
 
-bool flag = false;
-
 void chassisTask(void *argument){
     
     TickType_t current = xTaskGetTickCount();
