@@ -79,14 +79,10 @@ void debug1Task(void *argument)
         /* FireWater 格式：每行 "名字:值1,值2,..."，行尾 \n。
          * 要加减监测变量，只改下面的格式串和参数列表即可（值用 f2() 包一下）。 */
         int len = snprintf(debug_buffer, sizeof(debug_buffer),
-            "drive:%s,%s,%s,%s,%s,%s,%s,%s\n",
-            //"steer:%s,%s,%s,%s,%s,%s,%s,%s\n",
+            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+            //"%s,%s,%s,%s,%s,%s,%s,%s\n"
+            //"%s\n",
             
-
-            //如果要加 第一步：
-            //"lift:%s,%s,%s,%s\n",
-
-
             // 驱动轮 
             f2(chassis_drivemotors[0]->getRefDegSpeed()), //目标值
             f2(chassis_drivemotors[0]->getDegSpeed()),    //实际值
@@ -97,7 +93,7 @@ void debug1Task(void *argument)
             f2(chassis_drivemotors[3]->getRefDegSpeed()),
             f2(chassis_drivemotors[3]->getDegSpeed()),
 
-            /*
+            
             // 舵向轮 
             f2(chassis_dirmotors[0]->getRefDeg()),  //目标值
             f2(chassis_dirmotors[0]->getSumDeg()),  //实际值
@@ -107,7 +103,7 @@ void debug1Task(void *argument)
             f2(chassis_dirmotors[2]->getSumDeg()),
             f2(chassis_dirmotors[3]->getRefDeg()),
             f2(chassis_dirmotors[3]->getSumDeg()),
-            */
+            
 
             // IMU：yaw 
             f2(imu_data.yaw_deg));
