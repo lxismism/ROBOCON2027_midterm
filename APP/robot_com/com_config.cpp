@@ -40,26 +40,31 @@ CanBus fdcan1_bus(hfdcan1);
 VESCMotor chassis_drivemotor1(&fdcan1_bus, 101, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f, 1.0f, 20000.0f, 0.0f,
-    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
+    9.0f, 6.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
+
+    //Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor2(&fdcan1_bus, 102, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT,VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.0f,
-    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
+    9.0f, 6.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
+
 
 VESCMotor chassis_drivemotor3(&fdcan1_bus, 103, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.00f,
-    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
+    9.0f, 6.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
+
 
 VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::OutputType::SPEED, 
     VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.0f,
-    7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
+    9.0f, 6.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
+
 
 
 

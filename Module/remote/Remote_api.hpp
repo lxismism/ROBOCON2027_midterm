@@ -13,13 +13,16 @@ enum class Channel : uint8_t {
 };
 
 // 0 -> -1，2048 -> 0，4095 -> 1。
-inline int16_t normalize_channel(uint16_t raw)
+inline int16_t normalize_channel(int16_t raw)
 {
-    if (raw > 4095U) {
-        raw = 4095U;
+    if (raw > 4095) {
+        raw = 4095;
     }
-
-    const int16_t offset = static_cast<int16_t>(raw) - 2048;
+    if(raw<0)
+    {
+        raw=0;
+    }
+    const int16_t offset = static_cast<int16_t>(raw - 2048);
     return offset;
 }
 

@@ -65,12 +65,12 @@ void Remote_Data_Process()
     }
     
 }
-
+float right_x1;
 void controlTask(void *argument){
     TickType_t current = xTaskGetTickCount();
 
     for(;;){
-
+        right_x1 = static_cast<float>(Remote::get_channel(sub_remote_data, Remote::Channel::RIGHT_X));
         if(remote_data_sub.TryGet(&sub_remote_data)){
             Remote_Data_Process();
             chassis_cmd_pub.Publish(chassis_cmd);

@@ -85,7 +85,7 @@ namespace Remote{
             return false;
         }
 
-        State next{};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          State next{};
 
         // 前两路保持反向，同时保持 2048 中点和两个端点。
         // 中点两侧跨度不同，分段缩放并四舍五入到原始通道精度。
@@ -107,7 +107,7 @@ namespace Remote{
 
         if(read_uint16(frame_+8)<1824)
         {
-            next.ch[3] = read_uint16(frame_+8)*(2048/1600)-(2048/8);
+            next.ch[3] = read_uint16(frame_+8)*(2048/1600)-(2048/8);                                                                                                                                                                                                                 
         }else{
             next.ch[3] = read_uint16(frame_+8)+224;
 
