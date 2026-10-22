@@ -60,8 +60,9 @@ void Remote_Data_Process()
     if(std::fabs(right_x) < 850.0f){
         chassis_cmd.omega_ = 0.0f;
     } else{
-        chassis_cmd.omega_ = math_utils::Map(right_x, -kMaxCh, 
-            kMaxCh, -kPI / 2.0f, kPI / 2.0f);
+        chassis_cmd.omega_ = -math_utils::Map(right_x, -kMaxCh, 
+            kMaxCh, -kPI / 2.0f, kPI / 2.0f);   //这个负号是根据实际情况定的
+            
     }
     
 }

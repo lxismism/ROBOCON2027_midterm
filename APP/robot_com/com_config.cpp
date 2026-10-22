@@ -16,6 +16,8 @@
 #include "usart.h"
 #include "fdcan.h"
 
+#include "photogate.hpp"
+
 #include "memory_map.h"
 #include "UartPort.hpp"
 #include "WitMotionimu.hpp"
@@ -32,6 +34,17 @@
 #include "chassis_solution.hpp"
 
 #include "Remote_receiver.hpp"
+
+/*-------------------------------------gpio----------------------------------------*/
+PhotoGate chassis_photogate1(PHOTOGATE1_GPIO_Port, PHOTOGATE1_Pin);
+PhotoGate chassis_photogate2(PHOTOGATE2_GPIO_Port, PHOTOGATE2_Pin);
+PhotoGate chassis_photogate3(PHOTOGATE3_GPIO_Port, PHOTOGATE3_Pin);
+PhotoGate chassis_photogate4(PHOTOGATE4_GPIO_Port, PHOTOGATE4_Pin);
+std::array<PhotoGate*, kWheelNum> chassis_photogates
+    {&chassis_photogate1, &chassis_photogate2,
+     &chassis_photogate3, &chassis_photogate4};
+/*-------------------------------------gpio----------------------------------------*/
+
 /*-------------------------------------fdcan1----------------------------------------*/
 
 osThreadId_t can1Send_TaskHandle;
@@ -63,7 +76,7 @@ VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::OutputType::SPEED,
 
 
 
-std::array<MotorBase*, 4> chassis_drivemotors{&chassis_drivemotor1, &chassis_drivemotor2,
+std::array<VESCMotor*, 4> chassis_drivemotors{&chassis_drivemotor1, &chassis_drivemotor2,
                                               &chassis_drivemotor3, &chassis_drivemotor4};
 
 
@@ -104,7 +117,7 @@ C620Motor chassis_dirmotor4(&fdcan2_bus, 0x204, false, 0x200, false,
     20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
     Derivative_On_Measurement, 1.0f);
 
-std::array<MotorBase*, 4> chassis_dirmotors{&chassis_dirmotor1, &chassis_dirmotor2,
+std::array<C620Motor*, 4> chassis_dirmotors{&chassis_dirmotor1, &chassis_dirmotor2,
                                             &chassis_dirmotor3, &chassis_dirmotor4};
                                             
 

@@ -17,8 +17,8 @@
 
 osThreadId_t Chassis_TaskHandle;
 
-extern std::array<MotorBase*, 4> chassis_dirmotors;
-extern std::array<MotorBase*, 4> chassis_drivemotors;
+extern std::array<C620Motor*, kWheelNum> chassis_dirmotors;
+extern std::array<VESCMotor*, kWheelNum> chassis_drivemotors;
 SteerChassis SteerChassis_solver(chassis_dirmotors, chassis_drivemotors);
 
 static TypedTopicSubscriber<pub_chassis_cmd> chassis_cmd_sub("chassis_cmd", 8U);
@@ -31,9 +31,13 @@ void chassisTask(void *argument){
 
     for(;;)
     {
-        if(chassis_cmd_sub.TryGet(&chassis_cmd)){
-            SteerChassis_solver.run(chassis_cmd);
-        }
+        if(!SteerChassis_solver.HasHoming()){
+            SteerChassis_solver.homing();
+        } else{
+            if(chassis_cmd_sub.TryGet(&chassis_cmd)){
+                SteerChassis_solver.run(chassis_cmd);
+            }
+        }    
         vTaskDelayUntil(&current, 1);
     }
 }

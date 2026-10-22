@@ -57,6 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PHOTOGATE3_Pin GPIO_PIN_8
+#define PHOTOGATE3_GPIO_Port GPIOF
+#define PHOTOGATE4_Pin GPIO_PIN_9
+#define PHOTOGATE4_GPIO_Port GPIOF
+#define PHOTOGATE1_Pin GPIO_PIN_14
+#define PHOTOGATE1_GPIO_Port GPIOD
+#define PHOTOGATE2_Pin GPIO_PIN_15
+#define PHOTOGATE2_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 
