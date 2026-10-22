@@ -79,19 +79,23 @@ void debug1Task(void *argument)
         /* FireWater 格式：每行 "名字:值1,值2,..."，行尾 \n。
          * 要加减监测变量，只改下面的格式串和参数列表即可（值用 f2() 包一下）。 */
         int len = snprintf(debug_buffer, sizeof(debug_buffer),
-            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
             //"%s,%s,%s,%s,%s,%s,%s,%s\n"
             //"%s\n",
-            
-            // 驱动轮 
+
+            // 驱动轮：目标值 / 实际值 / 实际电流(A)
             f2(chassis_drivemotors[0]->getRefDegSpeed()), //目标值
             f2(chassis_drivemotors[0]->getDegSpeed()),    //实际值
+            f2(static_cast<VESCMotor*>(chassis_drivemotors[0])->getCurrent()), //电流
             f2(chassis_drivemotors[1]->getRefDegSpeed()),
             f2(chassis_drivemotors[1]->getDegSpeed()),
+            f2(static_cast<VESCMotor*>(chassis_drivemotors[1])->getCurrent()),
             f2(chassis_drivemotors[2]->getRefDegSpeed()),
             f2(chassis_drivemotors[2]->getDegSpeed()),
+            f2(static_cast<VESCMotor*>(chassis_drivemotors[2])->getCurrent()),
             f2(chassis_drivemotors[3]->getRefDegSpeed()),
             f2(chassis_drivemotors[3]->getDegSpeed()),
+            f2(static_cast<VESCMotor*>(chassis_drivemotors[3])->getCurrent()),
 
             
             // 舵向轮 

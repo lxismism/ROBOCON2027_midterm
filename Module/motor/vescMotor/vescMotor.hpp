@@ -124,7 +124,10 @@ public:
     }
 
     float cmdTrans() { return cmd_ ; }
-    
+
+    /* 状态帧里的实际电机电流，单位 A */
+    float getCurrent() const { return current_; }
+
     void update(void){
         if(!isOffline()){
             if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
