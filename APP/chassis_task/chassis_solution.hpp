@@ -2,6 +2,11 @@
  * @file chassis_solution.hpp
  * @author lxlx (1729649497@qq.com)
  * @brief 
+    底盘解算的四个舵轮布局如下：
+            1    0   
+
+            2    3
+
  * @version 0.1
  * @date 2026-10-07
  * 
@@ -10,14 +15,35 @@
  */
 #pragma once
 
+#include "gpio.h"
+
 #include "MotorBase.hpp"
 #include "CanBus.hpp"
 #include "djiMotor.hpp"
 #include "vescMotor.hpp"
 
+#include "photogate.hpp"
+
 #include "topic_pool.h"
-#include <cmath>
+#include "math_utils.hpp"
 #include <array>
+
+static constexpr uint8_t kWheelNum = 4U;        //轮数
+
+static constexpr std::array<std::array<float, 2>, kWheelNum> edge_at_zeros{{
+    {-135.0f, 45.0f},
+    {-60.0f, 120.0f},
+    {30.0f, -150.0f},
+    {120.0f, -60.0f}
+}};
+
+static constexpr uint8_t homing_ways[kWheelNum]{0, 1, 0, 1};
+
+extern PhotoGate chassis_photogate1;
+extern PhotoGate chassis_photogate2;
+extern PhotoGate chassis_photogate3;
+extern PhotoGate chassis_photogate4;
+extern std::array<PhotoGate*, kWheelNum> chassis_photogates;
 
 struct Velocity_t{
     float dir;
@@ -25,18 +51,24 @@ struct Velocity_t{
 };
 
 class SteerWheel{
-    /*
-        1    0   
-
-        2    3
-    */
-
 public:
     SteerWheel() = default;
 
-    void init(MotorBase* dirmotor, MotorBase* drivemotor){
+    enum class HomingState : uint8_t{
+        Find_First_Zero = 0,
+        Find_Second_Zero,
+        Find_Third_Zero,
+        Check,
+        Finish,
+    };
+
+    void init(C620Motor* dirmotor, VESCMotor* drivemotor, PhotoGate* photogate, 
+              uint8_t homing_way, const std::array<float, 2>& edge_at_zero){
         dirmotor_ = dirmotor;
         drivemotor_ = drivemotor;
+        photogate_ = photogate;
+        homing_way_ = homing_way;
+        edge_at_zero_ = edge_at_zero;
     }
 
     void setVelocity(Velocity_t target_velocity){
@@ -80,7 +112,81 @@ public:
 
     }
 
+    void homing(void){
+        if(hashoming_ || dirmotor_->isOffline()) return;
 
+        ramp_deg_homing_ += (map_[homing_way_] * deg_homing_speed_);
+        dirmotor_->setMotorDeg(ramp_deg_homing_);
+        photogate_->update();
+        
+        switch (homing_state_) {
+            case HomingState::Find_First_Zero :{
+                if(photogate_->hasRisingEdge()){
+                    first_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_];
+                    homing_state_ = HomingState::Find_Second_Zero;
+                } 
+                else if(photogate_->hasFallingEdge()){
+                    first_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_^1];        //^1的作用：0变1,1变0，在此处是为了切换数组变量，这种方式优雅一点
+                    homing_state_ = HomingState::Find_Second_Zero;
+                }
+            }; break;
+
+            case HomingState::Find_Second_Zero :{
+                if(photogate_->hasRisingEdge()){
+                    second_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_];
+                    if(std::fabs(second_zero_ - first_zero_) > 170.0f){
+                        homing_state_ = HomingState::Find_Third_Zero;
+                    }       //这个判断是为了防止光电门在边沿附近抖动导致误触发判断，需要超过170度才能保证，它经过的边沿跟第一次经过的不是同一个，不然没意义啊。
+                }
+                else if(photogate_->hasFallingEdge()){
+                    second_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_^1];
+                    if(std::fabs(second_zero_ - first_zero_) > 170.0f){
+                        homing_state_ = HomingState::Find_Third_Zero;
+                    }       
+                }
+                
+
+            }; break;
+
+            case HomingState::Find_Third_Zero :{
+                if(photogate_->hasRisingEdge()){
+                    third_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_];
+                    if(std::fabs(third_zero_ - second_zero_) > 170.0f){
+                        homing_state_ = HomingState::Check;
+                    }       //这个判断是为了防止光电门在边沿附近抖动导致误触发判断，需要超过170度才能保证，它经过的边沿跟第一次经过的不是同一次，不然没意义啊。
+                }
+                else if(photogate_->hasFallingEdge()){
+                    third_zero_ = dirmotor_->getSumDeg() - edge_at_zero_[homing_way_^1];
+                    if(std::fabs(third_zero_ - second_zero_) > 170.0f){
+                        homing_state_ = HomingState::Check;
+                    }       
+                }
+                
+            }; break;
+
+            case HomingState::Check :{
+                const float first_offset_ = math_utils::WrapAngle(first_zero_, -180.0f, 180.0f);
+                const float second_offset_ = math_utils::WrapAngle(second_zero_, -180.0f, 180.0f);
+                const float third_offset_ = math_utils::WrapAngle(third_zero_, -180.0f, 180.0f);
+
+                if(std::fabs(first_offset_ - second_offset_) < 5.0f &&
+                   std::fabs(second_offset_ - third_offset_) < 5.0f){
+                    deg_offset_ = (first_offset_ + second_offset_ + third_offset_) / 3.0f;
+                    homing_state_ = HomingState::Finish;
+                } else {
+                    homing_state_ = HomingState::Find_First_Zero;
+                }
+            }; break;
+
+            case HomingState::Finish :{
+                hashoming_ = true;
+            }; break;
+
+        }
+        
+    }
+
+    bool IsReady(void) { return hashoming_; }
 
 private:
     static constexpr float kWheelDiameter = 0.104f;     //轮径
@@ -89,11 +195,28 @@ private:
     static constexpr float kWheelDriveReduction = 1.0f;     //电机输出轴->驱动轮的减速比
     static constexpr float kWheelDirReduction = 1.0f;       //电机输出轴->舵向轮的减速比
 
-    static constexpr float kAlionErr = 10.0f;
-    static constexpr uint32_t kAlionTick = 1U;
+    C620Motor* dirmotor_{};
+    VESCMotor* drivemotor_{};
+    PhotoGate* photogate_{};
 
-    MotorBase* dirmotor_{};
-    MotorBase* drivemotor_{};
+/*------------------------------homing----------------------------*/
+    uint8_t homing_way_{0};  //默认逆时针转动来归零
+    std::array<float, 2> map_{1.0f, -1.0f};
+
+
+    std::array<float, 2> edge_at_zero_{-150.0f, 30.0f};     //这个数组存的，是两个cnc边沿，在极坐标中的真实位置，由且仅由安装位置决定。
+                                                                    //编号为0的数组意为逆时针针转时，遇到的上升沿位置，这里根据0号轮填了个默认值。
+    float deg_offset_{};
+    float ramp_deg_homing_{};
+    float deg_homing_speed_{0.1f};
+
+    float first_zero_{};    
+    float second_zero_{};
+    float third_zero_{};
+
+    HomingState homing_state_{};
+    bool hashoming_{false};
+/*------------------------------homing----------------------------*/
 
     Velocity_t current_velocity_{};
     Velocity_t last_velocity_{};
@@ -103,24 +226,28 @@ private:
 
         wheel_sum_deg_ = dirmotor_->getSumDeg() / kWheelDirReduction;
         
-        current_velocity_.dir = math_utils::WrapAngle(wheel_sum_deg_,
+        current_velocity_.dir = math_utils::WrapAngle(wheel_sum_deg_ - deg_offset_,
             -180.0f, 180.0f);
         current_velocity_.speed = drivemotor_->getDegSpeed() * DEG_2_RAD * kWheelRadmeter / kWheelDriveReduction;
         
     }
 
-
-
 };
 
 class SteerChassis{
-public:
-    static constexpr uint8_t kWheelNum = 4U;        //轮数
+    
+    /*
+        1    0   
 
-    SteerChassis(const std::array<MotorBase* , kWheelNum> &dirmotors,
-                 const std::array<MotorBase* , kWheelNum> &drivemotors){
+        2    3
+    */
+
+public:
+    SteerChassis(const std::array<C620Motor* , kWheelNum> &dirmotors,
+                 const std::array<VESCMotor* , kWheelNum> &drivemotors){
         for(uint8_t i = 0; i < kWheelNum; ++i){
-            steerwheels_[i].init(dirmotors[i], drivemotors[i]);
+            steerwheels_[i].init(dirmotors[i], drivemotors[i], 
+                chassis_photogates[i], homing_ways[i], edge_at_zeros[i]);
         }
     }
 
@@ -159,7 +286,18 @@ public:
 
     }
 
+    void homing(void){
+        for(uint8_t i = 0; i < kWheelNum; ++i){
+            steerwheels_[i].homing();
+        }
+    }
 
+    bool HasHoming(void){
+        return (steerwheels_[0].IsReady() &&
+                steerwheels_[1].IsReady() &&
+                steerwheels_[2].IsReady() &&
+                steerwheels_[3].IsReady());
+    }
 
 private:
 

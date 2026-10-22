@@ -55,7 +55,8 @@ public:
     }
 
     
-
+    float getRefDeg(void) const { return ref_deg_; }
+    float getRefDegSpeed(void) const { return ref_deg_speed_; }
 
     float getSingleDeg(void) const { return single_deg_; }
     float getSumDeg(void) const { return sum_deg_; }
