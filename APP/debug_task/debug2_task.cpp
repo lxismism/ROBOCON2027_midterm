@@ -19,7 +19,6 @@
 #include "djiMotor.hpp"
 
 osThreadId_t Debug2_TaskHandle;
-extern C610Motor extend_motor;
 
 void debug2Task(void *argument){
     TickType_t currentTime = xTaskGetTickCount();
