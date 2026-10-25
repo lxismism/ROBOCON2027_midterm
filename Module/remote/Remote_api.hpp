@@ -2,7 +2,27 @@
 
 #include "Remote_receiver.hpp"
 
+
+
 namespace Remote {
+
+typedef enum{
+    SW1 = 0b100000000000,
+    SW2 = 0b010000000000,
+    SW3 = 0b001000000000,
+    SW4 = 0b000100000000,
+
+    SW9 = 0b000010000000,
+    SW11= 0b000001000000,
+    SW14= 0b000000100000,
+    SW16= 0b000000010000,
+
+    SWRB= 0b0001000000000000,
+    SWR = 0b0010000000000000,
+    SWLB= 0b1000000000000000,
+    SWL = 0b0100000000000000,
+
+};
 
 // 对应 State::ch[0]～ch[3]。
 enum class Channel : uint8_t {

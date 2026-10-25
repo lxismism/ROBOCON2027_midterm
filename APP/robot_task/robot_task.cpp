@@ -18,6 +18,8 @@
 #include "com_config.h"
 #include "chassis_task.h"
 #include "control_task.h"
+#include "pickhand_task.h"
+#include "weaponhand_task.h"
 
 
 
@@ -31,6 +33,8 @@ extern osThreadId_t can2Send_TaskHandle;
 extern osThreadId_t can3Send_TaskHandle;
 extern osThreadId_t Chassis_TaskHandle;
 extern osThreadId_t control_TaskHandle;
+extern osThreadId_t pickHand_TaskHandle;
+extern osThreadId_t weaponhand_TaskHandle;
 
 
 void osTaskInit(void)
@@ -98,5 +102,18 @@ void osTaskInit(void)
     };
     control_TaskHandle = osThreadNew(controlTask, NULL, &controlTaskHandle_attributes);
 
-    
+    const osThreadAttr_t pickHandTaskHandle_attributes = {
+        .name = "pickHand_TaskHandle",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t)osPriorityRealtime,
+    };
+    pickHand_TaskHandle = osThreadNew(pickHandTask, NULL, &pickHandTaskHandle_attributes);
+
+    const osThreadAttr_t weaponhandTaskHandle_attributes = {
+        .name = "weaponhand_TaskHandle",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t)osPriorityRealtime,
+    };
+    weaponhand_TaskHandle = osThreadNew(weaponhandTask, NULL, &weaponhandTaskHandle_attributes);
+
 }

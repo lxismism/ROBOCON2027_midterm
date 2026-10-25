@@ -38,6 +38,7 @@ extern PhotoGate chassis_photogate2;
 extern PhotoGate chassis_photogate3;
 extern PhotoGate chassis_photogate4;
 
+
 uint32_t rising{};
 uint32_t falling{};
 
@@ -46,15 +47,9 @@ void debug2Task(void *argument){
 
     for(;;){
         
-        chassis_photogate4.update();
-        if(chassis_photogate4.hasRisingEdge()){
-            rising++;
-        }
-        else if(chassis_photogate4.hasFallingEdge()){
-            falling++;
-        }
+        
 
-        vTaskDelayUntil(&currentTime, 20);
+        vTaskDelayUntil(&currentTime, 1);
     }
 
 }

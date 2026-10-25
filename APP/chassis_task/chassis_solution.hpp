@@ -31,7 +31,7 @@
 static constexpr uint8_t kWheelNum = 4U;        //轮数
 
 static constexpr std::array<std::array<float, 2>, kWheelNum> edge_at_zeros{{
-    {-135.0f, 45.0f},
+    {-150.0f, 30.0f},
     {-60.0f, 120.0f},
     {30.0f, -150.0f},
     {120.0f, -60.0f}
@@ -251,16 +251,18 @@ public:
         }
     }
 
-    void run(const pub_chassis_cmd &cmd){
-        const float vx = cmd.linear_x_;
-        const float vy = cmd.linear_y_;
+    void run(const pub_chassis_cmd &cmd, const pub_imu_data &imu_data){
+        const float yaw_rad = imu_data.yaw_deg * DEG_2_RAD;
+
+        const float vx = cmd.linear_x_ * std::cos(yaw_rad) + cmd.linear_y_ * std::sin(yaw_rad);
+        const float vy = -cmd.linear_x_ * std::sin(yaw_rad) + cmd.linear_y_ * std::cos(yaw_rad);
         const float omega = cmd.omega_;
 
         velocitys_[0].speed = std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
                                      (vy + omega * kx) * (vy + omega * kx));
         velocitys_[1].speed = -std::sqrt((vx - omega * ky) * (vx - omega * ky) + 
                                      (vy - omega * kx) * (vy - omega * kx));
-        velocitys_[2].speed = std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
+        velocitys_[2].speed = -std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
                                      (vy - omega * kx) * (vy - omega * kx));
         velocitys_[3].speed = -std::sqrt((vx + omega * ky) * (vx + omega * ky) + 
                                      (vy + omega * kx) * (vy + omega * kx));

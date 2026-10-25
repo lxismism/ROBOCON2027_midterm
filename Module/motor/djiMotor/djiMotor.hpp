@@ -22,9 +22,9 @@ public:
     C610Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 36.0f / 1.0f, float max_cmd = 10000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 10000.0f, float speed_Integral_Limit = 10000.0f,
-              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
+              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f, bool use_speed_planner = false, float deg_jerk = 20000.0f,
               float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_output=20000.0f, float deg_Integral_Limit=20000.0f,
-              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
+              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f, bool use_deg_planner = false, float des_accel = 30000.0f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
                 reduction_ratio_ = reduction;
@@ -52,7 +52,10 @@ public:
                 deg_pid_.Improve = pid_deg_improve;
                 deg_pid_.DeadBand = deg_deadband;
 
-
+                speed_planner_.init(deg_jerk);
+                deg_planner_.init(des_accel);
+                use_speed_planner_ = use_speed_planner;
+                use_deg_planner_ = use_deg_planner;
             }
 
     void onRx(const uint8_t data[8], const uint8_t len) override {
@@ -89,11 +92,26 @@ public:
 
     void update(void){
         if(!isOffline()){
+            if(use_deg_planner_){
+                ramp_deg_ = deg_planner_.update(ref_deg_, ref_des_deg_speed_);
+            } else{
+                ramp_deg_ = ref_deg_;
+            }
+
             if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+
+            if(use_speed_planner_){
+                ramp_deg_speed_ = speed_planner_.update(ref_deg_speed_, deg_accel_);
+            } else{
+                ramp_deg_speed_ = ref_deg_speed_;
+            }
+            
             if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
             //目前只做了串级pid
         } else {
             resetPids();
+            deg_planner_.reset();
+            speed_planner_.reset();
         }
     }
 private:
@@ -111,9 +129,9 @@ public:
     C620Motor(CanBus *manager, uint32_t id, bool is_extid, uint32_t tx_id, bool tx_is_extid, const OutputType output_type,
               float reduction = 3591.0f / 187.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
               float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
-              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f,
-              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float deg_max_out=20000.0f, float deg_max_IL=20000.0f,
-              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f)
+              uint16_t pid_speed_improve = NONE, float speed_deadband = 0.001f, bool use_speed_planner = false, float deg_jerk = 20000.0f,
+              float deg_kp=0.0f, float deg_ki=0.0f, float deg_kd=0.0f, float max_deg=5000.0f, float deg_max_IL=5000.0f,
+              uint16_t pid_deg_improve = NONE, float deg_deadband = 0.001f, bool use_deg_planner = false, float des_accel = 30000.0f)
               : CanDevice(manager, id, is_extid, tx_id, tx_is_extid){
 
                 reduction_ratio_ = reduction;
@@ -134,12 +152,18 @@ public:
                 deg_pid_.Kp = deg_kp;
                 deg_pid_.Ki = deg_ki;
                 deg_pid_.Kd = deg_kd;
-                deg_pid_.Maxout = deg_max_out;
+                deg_pid_.Maxout = max_deg;
                 deg_pid_.IntegralLimit = deg_max_IL;
 
                 deg_pid_.Output_LPF_RC = output_filter_rc;
                 deg_pid_.Improve = pid_deg_improve;
                 deg_pid_.DeadBand = deg_deadband;
+
+                speed_planner_.init(deg_jerk);
+                use_speed_planner_ = use_speed_planner;
+
+                deg_planner_.init(des_accel);
+                use_deg_planner_ = use_deg_planner;
             }
 
 
@@ -186,11 +210,25 @@ public:
 
     void update(void){
         if(!isOffline()){
+            if(use_deg_planner_){
+                ramp_deg_ = deg_planner_.update(ref_deg_, ref_des_deg_speed_);
+            } else{
+                ramp_deg_ = ref_deg_;
+            }
+
             if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+
+            if(use_speed_planner_){
+                ramp_deg_speed_ = speed_planner_.update(ref_deg_speed_, deg_accel_);
+            } else{
+                ramp_deg_speed_ = ref_deg_speed_;
+            }
+            
             if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
             //目前只做了串级pid
         } else {
             resetPids();
+
         }
     }
 

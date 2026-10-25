@@ -66,7 +66,7 @@ protected:
     uint32_t tx_id_;
     bool tx_is_extid_;
 
-    static constexpr uint32_t kDefaultRxTimeoutMs = 10;
+    static constexpr uint32_t kDefaultRxTimeoutMs = 1000;
     uint32_t rx_timeout_ms_{kDefaultRxTimeoutMs};
     volatile int32_t last_rx_tick_{};
 

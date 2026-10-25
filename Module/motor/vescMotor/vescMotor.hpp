@@ -41,7 +41,7 @@ public:
     };
 
     VESCMotor(CanBus *manager, uint32_t id, const OutputType output_type, 
-        const uint8_t command_id = CAN_PACKET_SET_CURRENT, const uint8_t status_id = CAN_PACKET_STATUS,
+        const uint8_t command_id = CAN_PACKET_SET_RPM, const uint8_t status_id = CAN_PACKET_STATUS,
         float num_of_pole_pairs = 21.0f, float reduction = 1.0f, float max_cmd = 20000.0f, float output_filter_rc = 0.0f,
         float speed_kp=0.0f, float speed_ki=0.0f, float speed_kd=0.0f, float speed_max_out = 20000.0f, float speed_max_IL = 20000.0f,
         float pid_speed_improve = NONE, float speed_deadband = 0.001f,
@@ -126,13 +126,25 @@ public:
     float cmdTrans() { return cmd_ ; }
     
     void update(void){
-        if(!isOffline()){
-            if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
-            if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
-            //目前只做了串级pid
-        } else {
-            resetPids();
+
+        switch (command_id_) {
+            case CAN_PACKET_SET_CURRENT : {
+                if(!isOffline()){
+                    if(output_type_ == OutputType::DEGREE ) pidDegUpdate();
+                    if(output_type_ != OutputType::NONE) pidDegSpeedUpdate();
+                    //目前只做了串级pid
+                } else {
+                    resetPids();
+                }
+            }break;
+
+            case CAN_PACKET_SET_RPM : {
+                if(!isOffline()){
+                    cmd_ = ref_deg_speed_ * static_cast<float>(num_of_pole_pairs_) / RPM_2_DEG_PER_SEC;
+                }
+            }
         }
+
     }
 private:
     uint8_t command_id_;

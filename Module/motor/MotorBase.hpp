@@ -14,6 +14,8 @@
 #include "Canbus.hpp"
 #include "pid_controller.h"
 #include "math_utils.hpp"
+#include "ramp_planner.hpp"
+
 
 #define RAD_2_DEG            57.2957795f
 #define DEG_2_RAD            0.01745329252f
@@ -37,16 +39,16 @@ public:
     }
     
     void setMotorDegSpeed(float deg_speed) { ref_deg_speed_ = deg_speed; }
-    void setMotorDeg(float deg) { ref_deg_ = deg; }
-
+    void setMotorDeg(float deg) { ref_deg_ = deg; ref_des_deg_speed_ = kDefaultDesSpeed; }
+    void setMotorDeg(float deg, float des_speed){ ref_deg_ = deg; ref_des_deg_speed_ = des_speed; }
 
 
     void pidDegUpdate(void) {
-        ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ref_deg_);
+        ref_deg_speed_ = PID_Calculate(&deg_pid_, sum_deg_, ramp_deg_);
     }
 
     void pidDegSpeedUpdate(void){
-        cmd_ = PID_Calculate(&deg_speed_pid_, deg_speed_, ref_deg_speed_);
+        cmd_ = PID_Calculate(&deg_speed_pid_, deg_speed_, ramp_deg_speed_);
     }
 
     void resetPids(void){
@@ -65,12 +67,18 @@ public:
     float getTemperature(void) const { return temperature_; }
 
 protected:
+    static constexpr float kDefaultDesSpeed = 300.0f;
+
     float cmd_{0.0f};
     float ref_deg_speed_{0.0f};
+    float ramp_deg_speed_{0.0f};
+    float ref_des_deg_speed_{300.0f};
     float ref_deg_{0.0f};
+    float ramp_deg_{0.0f};
     
     float max_cmd_{99999.0f};
     float reduction_ratio_{1.0f};
+    float deg_accel_{5000.0f};
 
     float single_deg_{0.0f};    //转子在单圈内的绝对位置
     float sum_deg_{0.0f};       //电机输出轴累计的角度
@@ -80,6 +88,13 @@ protected:
 
     PID_t deg_speed_pid_{};
     PID_t deg_pid_{};
+
+    S_RampPlanner deg_planner_{};
+    bool use_deg_planner_{false};
+
+    S_RampPlanner speed_planner_{};
+    bool use_speed_planner_{false};
+
     OutputType output_type_{};
 };
 

@@ -70,11 +70,18 @@ uint8_t processByte(uint8_t byte){
                     (static_cast<uint16_t>(rx_buf_[7]) << 8) | 
                     static_cast<uint16_t>(rx_buf_[6]));
 
-                //data[8]~data[9]是版本号,data[10]是校验和
+                //data[8]~data[9]是版本号,data[10]是校验和，故不在此处理
 
-                newest_data_.roll_deg = static_cast<float>(raw_roll) * 180.0f / 32768.0f;
-                newest_data_.pitch_deg = static_cast<float>(raw_pitch) * 180.0f / 32768.0f;
-                newest_data_.yaw_deg = static_cast<float>(raw_yaw) * 180.0f / 32768.0f;
+                if(!hasInited_){
+                    offset_.roll_deg = static_cast<float>(raw_roll) * 180.0f / 32768.0f;
+                    offset_.pitch_deg = static_cast<float>(raw_pitch) * 180.0f / 32768.0f;
+                    offset_.yaw_deg = static_cast<float>(raw_yaw) * 180.0f / 32768.0f;
+                    hasInited_ = true;
+                }
+
+                newest_data_.roll_deg = static_cast<float>(raw_roll) * 180.0f / 32768.0f - offset_.roll_deg;
+                newest_data_.pitch_deg = static_cast<float>(raw_pitch) * 180.0f / 32768.0f - offset_.pitch_deg;
+                newest_data_.yaw_deg = static_cast<float>(raw_yaw) * 180.0f / 32768.0f - offset_.yaw_deg;
               
                 return 0x53;
             } 
@@ -96,25 +103,28 @@ const pub_imu_data &getImuData() const { return newest_data_; }
 
 private:
 
-static constexpr uint8_t kRxBufLen = 11U;
+    static constexpr uint8_t kRxBufLen = 11U;
 
-RxState state_{RxState::WAIT_HEADER};
-uint8_t rx_buf_[kRxBufLen]{};
-uint8_t rx_idx_{};
+    RxState state_{RxState::WAIT_HEADER};
+    uint8_t rx_buf_[kRxBufLen]{};
+    uint8_t rx_idx_{};
 
-void resetState(){
-    state_ = RxState::WAIT_HEADER;
-    rx_idx_ = 0;
-}
+    bool hasInited_{false};
 
-uint8_t calculateSum(uint8_t rx_buf[kRxBufLen]){
-    uint16_t sum = 0;
-    for(uint8_t i = 0; i < kRxBufLen - 1U; ++i){
-        sum += rx_buf[i];
+    void resetState(){
+        state_ = RxState::WAIT_HEADER;
+        rx_idx_ = 0;
     }
-    return static_cast<uint8_t>(sum & 0xFF);
-}
 
-pub_imu_data newest_data_{};
+    uint8_t calculateSum(uint8_t rx_buf[kRxBufLen]){
+        uint16_t sum = 0;
+        for(uint8_t i = 0; i < kRxBufLen - 1U; ++i){
+            sum += rx_buf[i];
+        }
+        return static_cast<uint8_t>(sum & 0xFF);
+    }
+
+    pub_imu_data newest_data_{};
+    pub_imu_data offset_{};
 
 };

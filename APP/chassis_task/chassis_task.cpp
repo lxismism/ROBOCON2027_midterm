@@ -24,6 +24,9 @@ SteerChassis SteerChassis_solver(chassis_dirmotors, chassis_drivemotors);
 static TypedTopicSubscriber<pub_chassis_cmd> chassis_cmd_sub("chassis_cmd", 8U);
 static pub_chassis_cmd chassis_cmd{};
 
+static TypedTopicSubscriber<pub_imu_data> imu_data_sub("imu_data", 8U);
+static pub_imu_data imu_data{};
+
 void chassisTask(void *argument){
     
     TickType_t current = xTaskGetTickCount();
@@ -35,7 +38,8 @@ void chassisTask(void *argument){
             SteerChassis_solver.homing();
         } else{
             if(chassis_cmd_sub.TryGet(&chassis_cmd)){
-                SteerChassis_solver.run(chassis_cmd);
+                imu_data_sub.TryGet(&imu_data);
+                SteerChassis_solver.run(chassis_cmd, imu_data);
             }
         }    
         vTaskDelayUntil(&current, 1);

@@ -28,6 +28,8 @@
 #include "vescMotor.hpp"
 #include "dmMotor.hpp"
 
+#include "bool_device.hpp"
+
 #include "topics.hpp"
 #include "topic_pool.h"
 #include <array>
@@ -51,25 +53,25 @@ osThreadId_t can1Send_TaskHandle;
 CanBus fdcan1_bus(hfdcan1);
 
 VESCMotor chassis_drivemotor1(&fdcan1_bus, 101, MotorBase::OutputType::SPEED, 
-    VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
+    VESCMotor::CAN_PACKET_SET_RPM, VESCMotor::CAN_PACKET_STATUS,
     21.0f, 1.0f, 20000.0f, 0.0f,
     7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor2(&fdcan1_bus, 102, MotorBase::OutputType::SPEED, 
-    VESCMotor::CAN_PACKET_SET_CURRENT,VESCMotor::CAN_PACKET_STATUS,
+    VESCMotor::CAN_PACKET_SET_RPM,VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.0f,
     7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor3(&fdcan1_bus, 103, MotorBase::OutputType::SPEED, 
-    VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
+    VESCMotor::CAN_PACKET_SET_RPM, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.00f,
     7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
 
 VESCMotor chassis_drivemotor4(&fdcan1_bus, 104, MotorBase::OutputType::SPEED, 
-    VESCMotor::CAN_PACKET_SET_CURRENT, VESCMotor::CAN_PACKET_STATUS,
+    VESCMotor::CAN_PACKET_SET_RPM, VESCMotor::CAN_PACKET_STATUS,
     21.0f,1.0f, 20000.0f, 0.0f,
     7.0f, 5.0f, 0.17f, 20000.0f, 20000.0f,
     Derivative_On_Measurement | INCREATEMENT_OF_OUT, 0.1f);
@@ -92,45 +94,80 @@ CanBus fdcan2_bus(hfdcan2);
 C620Motor chassis_dirmotor1(&fdcan2_bus, 0x201, false, 0x200, false, 
     MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.01f,
     400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
-    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f, false, 40000.0f,
     20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
     Derivative_On_Measurement, 1.0f);
 
 C620Motor chassis_dirmotor2(&fdcan2_bus, 0x202, false, 0x200, false, 
     MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.01f,
     400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
-    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,false, 40000.0f,
     20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
     Derivative_On_Measurement, 1.0f);
 
 C620Motor chassis_dirmotor3(&fdcan2_bus, 0x203, false, 0x200, false, 
     MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.01f,
     400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
-    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,false, 40000.0f,
     20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
     Derivative_On_Measurement, 1.0f);
 
 C620Motor chassis_dirmotor4(&fdcan2_bus, 0x204, false, 0x200, false, 
     MotorBase::OutputType::DEGREE, 8.0f,20000.0f, 0.01f,
     400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
-    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f,false, 40000.0f,
     20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
     Derivative_On_Measurement, 1.0f);
 
 std::array<C620Motor*, 4> chassis_dirmotors{&chassis_dirmotor1, &chassis_dirmotor2,
                                             &chassis_dirmotor3, &chassis_dirmotor4};
                                             
-
-/*-------------------------------------fdcan2----------------------------------------*/
-
-osThreadId_t can3Send_TaskHandle;
-CanBus fdcan3_bus(hfdcan3);
-
-C610Motor extend_motor(&fdcan3_bus, 0x202, false, 0x200, false, 
+C610Motor weapon_pick_motor(&fdcan2_bus, 0x208, false, 0x1FF, false, 
     MotorBase::OutputType::DEGREE, 36.0f,10000.0f, 0.005f,
     16.0f, 5.0f, 0.0f, 10000.0f, 10000.0f,
-    OutputFilter, 0.1,
-    5.0f);
+    Derivative_On_Measurement, 0.1f, false, 40000.0f,
+    5.0f, 0.0f, 0.0f, 20000.0f, 20000.0f, Derivative_On_Measurement, 0.001f, true, 3000.0f);
+/*-------------------------------------fdcan2----------------------------------------*/
+
+/*-------------------------------------fdcan3----------------------------------------*/
+
+osThreadId_t can3Send_TaskHandle;
+
+CanBus fdcan3_bus(hfdcan3);
+
+DM4310Motor wrist_motor(&fdcan3_bus, 0x05, 0x05, DM4310Motor::PosWithSpeed);
+
+C610Motor extend_motor(&fdcan3_bus, 0x205, false, 0x200, false, 
+    MotorBase::OutputType::DEGREE, 36.0f,10000.0f, 0.005f,
+    16.0f, 5.0f, 0.0f, 10000.0f, 10000.0f,
+    Derivative_On_Measurement, 0.1f, false, 40000.0f,
+    5.0f, 0.0f, 0.0f, 20000.0f, 20000.0f, Derivative_On_Measurement, 0.001f, true, 3000.0f);
+
+
+C620Motor lift_motor(&fdcan3_bus, 0x201, false, 0x200, false, 
+    MotorBase::OutputType::DEGREE, 3591.0f / 187.0f,20000.0f, 0.01f,
+    400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f, false, 40000.0f,
+    20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
+    Derivative_On_Measurement, 1.0f, true, 1000.0f);
+
+C620Motor tripod_motor(&fdcan3_bus, 0x202, false, 0x200, false, 
+    MotorBase::OutputType::DEGREE, 3591.0f / 187.0f,20000.0f, 0.01f,
+    400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f, false, 40000.0f,
+    20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
+    Derivative_On_Measurement, 1.0f, true, 700.0f);
+
+BoolDevice pump(PUMP_PICKHAND_GPIO_Port, PUMP_PICKHAND_Pin);
+BoolDevice valve(VALVE_PICKHAND_GPIO_Port, VALVE_PICKHAND_Pin);
+
+
+C620Motor weapon_lift_motor(&fdcan3_bus, 0x203, false, 0x200, false, 
+    MotorBase::OutputType::DEGREE, 3591.0f / 187.0f,20000.0f, 0.01f,
+    400.0f, 5000.0f, 0.0f, 20000.0f, 20000.0f,
+    Derivative_On_Measurement | INCREATEMENT_OF_OUT | OutputFilter, 0.1f, false, 40000.0f,
+    20.0f, 0.0f, 0.0f, 6000.0f, 6000.0f,
+    Derivative_On_Measurement, 1.0f, true, 3000.0f);
 
 
 
@@ -200,8 +237,15 @@ uint8_t comServiceInit(){
     fdcan2_bus.registerDevice(&chassis_dirmotor2);
     fdcan2_bus.registerDevice(&chassis_dirmotor3);
     fdcan2_bus.registerDevice(&chassis_dirmotor4); 
+    fdcan2_bus.registerDevice(&weapon_pick_motor);
+
     
+    fdcan3_bus.registerDevice(&lift_motor);
+    fdcan3_bus.registerDevice(&tripod_motor);
     fdcan3_bus.registerDevice(&extend_motor);
+    fdcan3_bus.registerDevice(&wrist_motor);
+
+    fdcan3_bus.registerDevice(&weapon_lift_motor);
 
     uart2_rx_semaphore = osSemaphoreNew(1, 0, NULL);
     uart2_port.startRxDmaIdle();
@@ -399,6 +443,26 @@ void can2SendTask(void *argument){
         for(uint8_t i = 0; i < 8; ++i) pack.data[i] = data[i];
         fdcan2_bus.addCanMsg(pack);
 
+
+        {   
+            weapon_pick_motor.update();
+
+            uint8_t data[8]{};
+            uint32_t motor_ids[4] = {0, 0, 0, 0x208};
+            int16_t commands[4] = {0,
+                                   0, 
+                                   0, 
+                                   static_cast<int16_t>(weapon_pick_motor.cmdTrans())};
+            CanBus::ClassicPack pack{};
+            pack.type = CanBus::Type::STANDARD;
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            pack.id = 0x1FF;
+            packDJIMotorCanMsg(pack.id, motor_ids, commands, 4, data);
+            for(uint8_t i = 0; i < 8U; ++i) pack.data[i] = data[i]; 
+
+            fdcan2_bus.addCanMsg(pack);
+        }
+
         vTaskDelayUntil(&current, 1);
     }
 }
@@ -411,21 +475,57 @@ void can3SendTask(void *argument){
     TickType_t current = xTaskGetTickCount();
 
     for(;;){
-        extend_motor.update();
 
-        uint8_t data[8]{};
-        uint32_t motor_ids[4] = {0, 0x202, 0, 0};
-        int16_t commands[4] = {0, static_cast<int16_t>(extend_motor.cmdTrans()), 0, 0};
-        CanBus::ClassicPack pack{};
-        pack.type = CanBus::Type::STANDARD;
-        pack.dlc = FDCAN_DLC_BYTES_8;
-        pack.id = 0x200;
-        packDJIMotorCanMsg(pack.id, motor_ids, commands, 4, data);
-        for(uint8_t i = 0; i < 8U; ++i) pack.data[i] = data[i]; 
+        {   
+            lift_motor.update();
+            tripod_motor.update();
+            weapon_lift_motor.update();
 
-        fdcan3_bus.addCanMsg(pack);
+            uint8_t data[8]{};
+            uint32_t motor_ids[4] = {0x201, 0x202, 0x203, 0};
+            int16_t commands[4] = {static_cast<int16_t>(lift_motor.cmdTrans()),
+                                   static_cast<int16_t>(tripod_motor.cmdTrans()),
+                                   static_cast<int16_t>(weapon_lift_motor.cmdTrans()), 0};
+            CanBus::ClassicPack pack{};
+            pack.type = CanBus::Type::STANDARD;
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            pack.id = 0x200;
+            packDJIMotorCanMsg(pack.id, motor_ids, commands, 4, data);
+            for(uint8_t i = 0; i < 8U; ++i) pack.data[i] = data[i]; 
+
+            fdcan3_bus.addCanMsg(pack);
+        }
+
+        {   
+            extend_motor.update();
+
+            uint8_t data[8]{};
+            uint32_t motor_ids[4] = {0x205, 0, 0, 0};
+            int16_t commands[4] = {static_cast<int16_t>(extend_motor.cmdTrans()),
+                                   0, 
+                                   0, 
+                                   0};
+            CanBus::ClassicPack pack{};
+            pack.type = CanBus::Type::STANDARD;
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            pack.id = 0x1FF;
+            packDJIMotorCanMsg(pack.id, motor_ids, commands, 4, data);
+            for(uint8_t i = 0; i < 8U; ++i) pack.data[i] = data[i]; 
+
+            fdcan3_bus.addCanMsg(pack);
+        }
             
-        vTaskDelayUntil(&current, 5);
+        {
+            CanBus::ClassicPack pack{};
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            pack.id = wrist_motor.getTxID();
+            pack.type = CanBus::Type::STANDARD;
+            if(wrist_motor.buildTx(pack.data)){
+                fdcan3_bus.addCanMsg(pack);
+            }
+        }
+
+        vTaskDelayUntil(&current, 1);
         
     }
 
