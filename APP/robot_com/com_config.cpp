@@ -27,6 +27,7 @@
 #include "djiMotor.hpp"
 #include "vescMotor.hpp"
 #include "dmMotor.hpp"
+#include "hightorqueMotor.hpp"
 
 #include "topics.hpp"
 #include "topic_pool.h"
@@ -134,6 +135,8 @@ C610Motor extend_motor(&fdcan3_bus, 0x202, false, 0x200, false,
 
 
 
+/* 高擎关节模组：8 字节经典帧（位置 / 运控模式），与 C620、达妙共用 fdcan3 */
+HightorqueMotor high_torque_motor(&fdcan3_bus, 1);
 /*-------------------------------------fdcan3----------------------------------------*/
 
 /*-------------------------------------usart2----------------------------------------*/
@@ -202,6 +205,7 @@ uint8_t comServiceInit(){
     fdcan2_bus.registerDevice(&chassis_dirmotor4); 
     
     fdcan3_bus.registerDevice(&extend_motor);
+    fdcan3_bus.registerDevice(&high_torque_motor);
 
     uart2_rx_semaphore = osSemaphoreNew(1, 0, NULL);
     uart2_port.startRxDmaIdle();
@@ -425,6 +429,18 @@ void can3SendTask(void *argument){
 
         fdcan3_bus.addCanMsg(pack);
             
+        // 高擎关节电机：一帧固定 8 字节经典帧（位置/运控模式，内部自行调度模式帧/读帧）
+        {
+            high_torque_motor.update();
+
+            CanBus::ClassicPack pack{};
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            pack.id = high_torque_motor.getTxID();
+            pack.type = CanBus::Type::STANDARD;
+            if(high_torque_motor.buildTx(pack.data)){
+                fdcan3_bus.addCanMsg(pack);
+            }
+        }
         vTaskDelayUntil(&current, 5);
         
     }
