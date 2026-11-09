@@ -27,6 +27,8 @@
 #include "djiMotor.hpp"
 #include "vescMotor.hpp"
 #include "dmMotor.hpp"
+#include "hightorqueMotor.hpp"
+#include "htDebug.hpp"
 
 #include "topics.hpp"
 #include "topic_pool.h"
@@ -134,6 +136,17 @@ C610Motor extend_motor(&fdcan3_bus, 0x202, false, 0x200, false,
 
 
 
+/* 高擎关节模组：8 字节经典帧（官方 ht_can 协议），与 C610、达妙共用 fdcan3 */
+HightorqueMotor high_torque_motor(&fdcan3_bus, 1);
+
+/* fdcan3 总线监听（只读快照，不改 CanBus）：串口里能看见总线上到底有什么帧 */
+CanTraceDevice fdcan3_trace(&fdcan3_bus);
+
+/* 串口调速命令：由 UART3 中断任务喂字节，由 debug1Task 取用并下发 */
+volatile float   ht_target_deg_s = 0.0f;   /* m<度/秒> */
+volatile float   ht_target_deg   = 0.0f;   /* p<度>   */
+volatile uint8_t ht_cmd_ack      = 0U;     /* 1=速度 2=位置 3=停转 4=命令非法 */
+static HtCmdParser ht_cmd_parser{};
 /*-------------------------------------fdcan3----------------------------------------*/
 
 /*-------------------------------------usart2----------------------------------------*/
@@ -185,6 +198,10 @@ uint8_t comServiceInit(){
 
     canFilterInit(&hfdcan3, FDCAN_STANDARD_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO0, 0);
     canFilterInit(&hfdcan3, FDCAN_STANDARD_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO1, 1);
+    /* 高擎电机回包是 0x0100（16 位 ID），可能以扩展帧发回来；
+       原来 fdcan3 只配了标准帧滤波器，扩展帧会被全局过滤器直接丢掉 → rx 永远 0。
+       这里补一条扩展帧全通滤波器（ExtFiltersNbr=2，索引 0 空闲）。 */
+    canFilterInit(&hfdcan3, FDCAN_EXTENDED_ID, 0, 0, FDCAN_FILTER_TO_RXFIFO0, 0);
     bspCanInit(&hfdcan3);
 
     fdcan1_bus.init();
@@ -202,6 +219,8 @@ uint8_t comServiceInit(){
     fdcan2_bus.registerDevice(&chassis_dirmotor4); 
     
     fdcan3_bus.registerDevice(&extend_motor);
+    fdcan3_bus.registerDevice(&high_torque_motor);
+    fdcan3_bus.registerDevice(&fdcan3_trace);      /* 只做快照，不参与控制 */
 
     uart2_rx_semaphore = osSemaphoreNew(1, 0, NULL);
     uart2_port.startRxDmaIdle();
@@ -293,6 +312,25 @@ void uart3RxProcessTask(void *argument){
         remote_receiver.poll(HAL_GetTick());
         while(uart3_port.Read(packet)){
            remote_receiver.feed(packet.data, packet.len, HAL_GetTick());
+
+           /* 同一个口上还有上位机调速命令（m240 / p30 / x），
+              解析器只认「m/p/x 开头 + 数字 + 回车」，遥控帧字节会被丢弃 */
+           for(uint8_t i = 0; i < packet.len; ++i){
+               float value = 0.0f;
+               const HtCmdParser::Kind k = ht_cmd_parser.feed(packet.data[i], value);
+               if(k == HtCmdParser::Kind::SPEED){
+                   ht_target_deg_s = value;
+                   ht_cmd_ack = 1U;
+               }else if(k == HtCmdParser::Kind::POS){
+                   ht_target_deg = value;
+                   ht_cmd_ack = 2U;
+               }else if(k == HtCmdParser::Kind::STOP){
+                   ht_target_deg_s = 0.0f;
+                   ht_cmd_ack = 3U;
+               }else if(k == HtCmdParser::Kind::BAD){
+                   ht_cmd_ack = 4U;
+               }
+           }
         }
         remote_receiver.poll(HAL_GetTick());
     }
@@ -425,6 +463,21 @@ void can3SendTask(void *argument){
 
         fdcan3_bus.addCanMsg(pack);
             
+        // 高擎关节电机：8 字节经典帧，帧 ID / 帧类型由驱动决定
+        // （控制帧默认标准帧 0x001，读状态帧用扩展帧 0x8001 —— 后者电机才会回包）
+        {
+            high_torque_motor.update();
+
+            CanBus::ClassicPack pack{};
+            pack.dlc = FDCAN_DLC_BYTES_8;
+            if(high_torque_motor.buildTx(pack.data)){
+                pack.id   = high_torque_motor.getFrameID();
+                pack.type = high_torque_motor.getFrameType();
+                if(fdcan3_bus.addCanMsg(pack) != CanBus::CanError::OK){
+                    high_torque_motor.notifyTxFail();   /* 队列满 = 帧没发出去 */
+                }
+            }
+        }
         vTaskDelayUntil(&current, 5);
         
     }
